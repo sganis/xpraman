@@ -10,7 +10,7 @@ import re
 import time
 from enum import Enum
 
-logger = logging.getLogger('golddrive')
+logger = logging.getLogger('xpra')
 logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
 
 DIR = os.path.dirname(os.path.realpath(__file__))
@@ -96,35 +96,6 @@ def testhost(userhost, port=22):
 		client.close()
 	return rb
 
-# def testlogin(userhost, password, port=22):
-# 	'''
-# 	Test ssh password authentication
-# 	'''
-# 	logger.debug(f'Logging in with password for {userhost}...')
-# 	rb = ReturnBox()
-# 	if not password:
-# 		rb.returncode =ReturnCode.BAD_LOGIN
-# 		rb.error = 'Empty password'
-# 		return rb
-
-# 	user, host = userhost.split('@')
-# 	client = paramiko.SSHClient()
-# 	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-	
-# 	try:
-# 		client.connect(hostname=host, username=user, password=password, port=port, timeout=10, look_for_keys=False)
-# 		rb.returncode = ReturnCode.OK
-# 	except (paramiko.ssh_exception.AuthenticationException,
-# 		paramiko.ssh_exception.BadAuthenticationType,
-# 		paramiko.ssh_exception.PasswordRequiredException) as ex:
-# 		rb.returncode = ReturnCode.BAD_LOGIN
-# 		rb.error = str(ex)
-# 	except Exception as ex:
-# 		rb.returncode = ReturnCode.BAD_HOST
-# 		rb.error = str(ex)
-# 	finally:
-# 		client.close()
-# 	return rb
 
 def testssh(userhost, port=22):
 	'''
