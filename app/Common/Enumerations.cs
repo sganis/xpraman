@@ -8,27 +8,20 @@
         Settings,
         About,
     }
-    public enum DriveStatus
+    public enum ApStatus
     {
-        FREE,
-        IN_USE,
-        MOUNTPOINT_IN_USE,
-        BROKEN,
-        DISCONNECTED,
-        CONNECTED,
-        NOT_SUPPORTED,
+        NOT_RUNNING,
+        RUNNING,
+        ATTACHED,
         UNKNOWN,
     }
-    public enum MountStatus
+    public enum ConnectStatus
     {
         OK,
-        BAD_DRIVE,
         BAD_HOST,
         BAD_KEY,
         BAD_PASSWORD,
         BAD_SSH,
-        BAD_WINFSP,
-        BAD_CLI,
         UNKNOWN,
     }
 }

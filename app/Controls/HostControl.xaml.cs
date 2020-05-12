@@ -23,7 +23,7 @@ namespace xpra
 
             switch(e.PropertyName)
             {
-                case nameof(viewModel.SelectedAp.Host):
+                case nameof(viewModel.Host):
                     Dispatcher.BeginInvoke((ThreadStart)delegate
                     {
                         txtHost.Focus();

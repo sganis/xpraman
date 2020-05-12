@@ -45,21 +45,7 @@ namespace xpra
         public string Title { get; set; }
         
         public ObservableCollection<Ap> Aps { get; set; } = new ObservableCollection<Ap>();
-        private Ap _selectedAp;
-        public Ap SelectedAp
-        {
-            get { return _selectedAp; }
-            set
-            {                  
-                if (_selectedAp != value)
-                {
-                    _selectedAp = value;
-                    NotifyPropertyChanged();
-                    NotifyPropertyChanged("HasApps");                    
-                }
-            }            
-        }
-
+        
         public bool HasApps
         { 
             get 
@@ -68,29 +54,29 @@ namespace xpra
             }
         }
 
-        private DriveStatus driveStatus;
-        public DriveStatus DriveStatus
+        private ApStatus apStatus;
+        public ApStatus ApStatus
         {
-            get { return driveStatus; }
+            get { return apStatus; }
             set
             {
-                driveStatus = value;
+                apStatus = value;
                 NotifyPropertyChanged();
-                NotifyPropertyChanged("ConnectButtonText");
-                NotifyPropertyChanged("ConnectButtonColor");
+                //NotifyPropertyChanged("ConnectButtonText");
+                //NotifyPropertyChanged("ConnectButtonColor");
             }
         }
 
-        private MountStatus _mountStatus;
-        public MountStatus MountStatus
+        private ConnectStatus _connectStatus;
+        public ConnectStatus ConnectStatus
         {
-            get { return _mountStatus; }
+            get { return _connectStatus; }
             set
             {
-                _mountStatus = value;
+                _connectStatus = value;
                 NotifyPropertyChanged();
-                NotifyPropertyChanged("MessageColor");
-                NotifyPropertyChanged("ConnectButtonIsEnabled");
+                //NotifyPropertyChanged("MessageColor");
+                //NotifyPropertyChanged("ConnectButtonIsEnabled");
 
             }
         }
@@ -106,12 +92,12 @@ namespace xpra
             }
         }
         
-        public string ConnectButtonText => 
-            (DriveStatus == DriveStatus.CONNECTED 
-            || DriveStatus == DriveStatus.BROKEN ) ? "Disconnect" : "Connect";
-        public string ConnectButtonColor => DriveStatus == DriveStatus.CONNECTED ? "#689F38" : "#607d8b";
-        public bool ConnectButtonIsEnabled => true;
-        public bool IsSettingsChanged { get; set; }
+        //public string ConnectButtonText => 
+        //    (DriveStatus == DriveStatus.CONNECTED 
+        //    || DriveStatus == DriveStatus.BROKEN ) ? "Disconnect" : "Connect";
+        //public string ConnectButtonColor => DriveStatus == DriveStatus.CONNECTED ? "#689F38" : "#607d8b";
+        //public bool ConnectButtonIsEnabled => true;
+        //public bool IsSettingsChanged { get; set; }
 
         private string message;
         public string Message
@@ -133,6 +119,72 @@ namespace xpra
             get { return password; }
             set { password = value; NotifyPropertyChanged(); }
         }
+        private string _host;
+        public string Host
+        {
+            get { return _host; }
+            set
+            {
+                if (_host != value)
+                {
+                    _host = value;
+                    NotifyPropertyChanged();
+                }
+
+            }
+        }
+
+        private string user;
+        public string User
+        {
+            get { return user; }
+            set
+            {
+                if (user != value)
+                {
+                    user = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+
+        private string port;
+        public string Port
+        {
+            get { return port; }
+            set
+            {
+                if (port != value)
+                {
+                    port = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+        public int CurrentPort
+        {
+            get
+            {
+                int port = int.Parse("0" + Port);
+                if (port == 0)
+                    port = 22;
+                return port;
+            }
+        }
+
+        public string CurrentUser
+        {
+            get
+            {
+                return string.IsNullOrEmpty(User) ? EnvironmentUser : User;
+            }
+        }
+        public string EnvironmentUser
+        {
+            get { return Environment.UserName.ToLower(); }
+        }
+        
         
         #endregion
 
@@ -142,7 +194,15 @@ namespace xpra
         {
             _apService = new ApService();
             //Messenger.Default.Register<string>(this, OnShowView);
-            
+
+
+
+            var name = "PATH";
+            var scope = EnvironmentVariableTarget.User; // or User
+            var oldValue = Environment.GetEnvironmentVariable(name, scope);
+            var newValue = @"C:\Xpra-Client-Python3-x86_64_4.0-r26306;" + oldValue;
+            Environment.SetEnvironmentVariable(name, newValue, scope);
+
             CurrentPage = Page.Main;
             LoadApsAsync();
             GetVersionsAsync();
@@ -172,29 +232,25 @@ namespace xpra
                 Message = "";
                 return;
             }
-            DriveStatus = r.DriveStatus;
-            MountStatus = r.MountStatus;
+            ApStatus = r.ApStatus;
+            ConnectStatus = r.ConnectStatus;
             Message = r.Error;
 
-            switch (r.MountStatus)
+            switch (r.ConnectStatus)
             {
-                case MountStatus.BAD_CLI:
-                case MountStatus.BAD_WINFSP:
-                case MountStatus.BAD_DRIVE:
-                    CurrentPage = Page.Main;
-                    break;
-                case MountStatus.BAD_HOST:
+                case ConnectStatus.BAD_HOST:
                     CurrentPage = Page.Host;
-                    OnFocusRequested(nameof(SelectedAp.Host));
+                    OnFocusRequested(nameof(
+                        Host));
                     break;
-                case MountStatus.BAD_PASSWORD:
-                case MountStatus.BAD_KEY:
+                case ConnectStatus.BAD_PASSWORD:
+                case ConnectStatus.BAD_KEY:
                     CurrentPage = Page.Password;
                     OnFocusRequested(nameof(Password));
                     break;
-                case MountStatus.OK:
+                case ConnectStatus.OK:
                     CurrentPage = Page.Main;
-                    Message = r.DriveStatus.ToString();
+                    Message = r.ApStatus.ToString();
                     NotifyPropertyChanged("HasDrives");
                     break;
                 default:
@@ -211,72 +267,35 @@ namespace xpra
             await Task.Run(() =>
             {
                 Settings settings = _apService.LoadSettings();
-                if (_selectedAp == null && settings.SelectedAp != null)
-                    SelectedAp = settings.SelectedAp;
-                //_apService.UpdateDrives(settings);
+                _apService.UpdateAps(settings);
+                Host = settings.Host;
+                Port = settings.Port.ToString();
+                User = settings.User;
             });
             
-            //UpdateObservableDrives();
+            UpdateObservableAps();
 
             if (_apService.Aps.Count == 0)
             {
                 CurrentPage = Page.Host;
-                OnFocusRequested(nameof(SelectedAp.Host));
+                OnFocusRequested(nameof(Host));
                 //SelectedAp = FreeDriveList.First();
                 WorkDone();
             }
             else
             {
-                CheckDriveStatusAsync();
+                ConnectAsync();
+                CheckApStatusAsync();
             }
             Loaded = true;
 
         }
 
-        private void UpdateObservableDrives()
+        private void UpdateObservableAps()
         {
-            //Ap old = null;
-            //if (SelectedAp != null)
-            //    old = SelectedAp;
-            //GoldDriveList.Clear();
-            //FreeDriveList.Clear();
-            //_apService.GoldDrives.ForEach(GoldDriveList.Add);
-            //_apService.FreeDrives.ForEach(FreeDriveList.Add);
-            //if (old != null && SelectedAp == null)
-            //    SelectedAp = old;
-
-            //if (SelectedAp != null)
-            //{
-            //    var d1 = _apService.GoldDrives.ToList().Find(x => x.Name == SelectedAp.Name);
-            //    if (d1 != null)
-            //    {
-            //        d1.Clone(SelectedAp);
-            //        SelectedAp = d1;
-            //    }
-            //    else
-            //    {
-            //        var d2 = _apService.FreeDrives.ToList().Find(x => x.Name == SelectedAp.Name);
-            //        if (d2 != null)
-            //        {
-            //            d2.Clone(SelectedAp);
-            //            SelectedAp = d2;
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    if (_apService.GoldDrives.Count > 0)
-            //    {
-            //        SelectedAp = _apService.GoldDrives.First();
-            //    }
-            //    else if (_apService.FreeDrives.Count > 0)
-            //    {
-            //        SelectedAp = _apService.FreeDrives.First();
-            //    }
-            //}
-
-            //NotifyPropertyChanged("FreeDriveList");
-            //NotifyPropertyChanged("GoldDriveList");
+            Aps.Clear();
+            _apService.Aps.ForEach(Aps.Add);            
+            NotifyPropertyChanged("Aps");
         }
 
         void ReportStatus(string message)
@@ -284,25 +303,31 @@ namespace xpra
             Message = message;
         }
 
-        private async void ConnectAsync(Ap ap)
+        private async void ConnectAsync()
         {
             WorkStart("Connecting...");
-            var status = new Progress<string>(ReportStatus);
-            ReturnBox r = await Task.Run(() => _apService.Connect(ap, status));
-            SkipComboChanged = true;
-            UpdateObservableDrives();
-            SkipComboChanged = false;
+            //var status = new Progress<string>(ReportStatus);
+            bool ok = await Task.Run(() => _apService.Connect(Host, CurrentPort, CurrentUser));
+            ReturnBox r = new ReturnBox();
+            if (!ok)
+            {
+                r.Error = _apService.Error;
+            }
+            else
+            {
+                r.Success = true;
+            }
             WorkDone(r);
         }
 
-        private async void CheckDriveStatusAsync()
+        private async void CheckApStatusAsync()
         {
-            if (SelectedAp != null)
-            {
-                //WorkStart("Checking status...");
-                //ReturnBox r = await Task.Run(() => _apService.CheckDriveStatus(SelectedAp));
-                //WorkDone(r);
-            }
+            //if (SelectedAp != null)
+            //{
+            //    //WorkStart("Checking status...");
+            //    //ReturnBox r = await Task.Run(() => _apService.CheckDriveStatus(SelectedAp));
+            //    //WorkDone(r);
+            //}
         }
 
         private async void GetVersionsAsync()
@@ -314,6 +339,7 @@ namespace xpra
 
         #region Command methods
 
+
         private async void OnConnect(object obj)
         {
             if (IsWorking)
@@ -321,50 +347,35 @@ namespace xpra
 
             Message = "";
 
-            if (Aps.Count == 0 || string.IsNullOrEmpty(SelectedAp.Host))
+            if (Aps.Count == 0 || string.IsNullOrEmpty(Host))
             {
                 //IsDriveNew = true;
                 //SelectedAp = FreeDriveList.First();
                 CurrentPage = Page.Host;
                 return;
             }
-            if (ConnectButtonText == "Connect")
-            {
-                ConnectAsync(SelectedAp);
-            }
-            else
-            {
-                WorkStart("Disconnecting...");
-               // ReturnBox r = await Task.Run(() => _apService.Unmount(SelectedAp));
-                //WorkDone(r);
-            }
-
+            ConnectAsync();
+            
         }
 
         private void OnConnectHost(object obj)
         {
-            if (string.IsNullOrEmpty(SelectedAp.Host))
+            if (string.IsNullOrEmpty(Host))
             {
                 Message = "Server is required";
-                OnFocusRequested(nameof(SelectedAp.Host));
+                OnFocusRequested(nameof(Host));
                 return;
             }
-            ConnectAsync(SelectedAp);
+            ConnectAsync();
         }
 
         private async void OnConnectPassword(object obj)
-        {
-            if (SelectedAp == null)
-            {
-                Message = "Invalid drive";
-                return;
-            }
-
+        {           
             WorkStart("Connecting...");
             var status = new Progress<string>(ReportStatus);
-            ReturnBox r = await Task.Run(() => _apService.ConnectPassword(SelectedAp, password, status));
+            ReturnBox r = await Task.Run(() => _apService.ConnectPassword(Host, CurrentPort, CurrentUser, password, status));
             SkipComboChanged = true;
-            UpdateObservableDrives();
+            UpdateObservableAps();
             SkipComboChanged = false;
             WorkDone(r);
         }
@@ -379,14 +390,8 @@ namespace xpra
         }
         private async void OnSettingsSave(object obj)
         {
-            if (SelectedAp == null)
-            {
-                Message = "Invalid drive";
-                return;
-            }
-
-            SelectedAp.Trim();
-            if (string.IsNullOrEmpty(SelectedAp.Host))
+            
+            if (string.IsNullOrEmpty(Host))
             {
                 Message = "Server is required";
                 OnFocusRequested("SelectedAp.Host");
@@ -394,8 +399,8 @@ namespace xpra
             }
 
             Regex hostRegex = new Regex(HostRegex);
-            if (!hostRegex.Match(SelectedAp.Host).Success 
-                && !hostRegex.Match(SelectedAp.Host).Success)
+            if (!hostRegex.Match(Host).Success 
+                && !hostRegex.Match(Host).Success)
             {
                 Message = "Invalid server name";
                 OnFocusRequested("SelectedAp.Host");
@@ -404,12 +409,12 @@ namespace xpra
             await Task.Run(() =>
             {
                 Settings settings = _apService.LoadSettings();
-                settings.AddDrive(SelectedAp);
+                //settings.AddDrive(SelectedAp);
                 _apService.SaveSettings(settings);
                 //_apService.UpdateDrives(settings);
             });
 
-            UpdateObservableDrives();
+            UpdateObservableAps();
             Message = "";
             //IsDriveNew = false;
             //IsDriveEdit = false;
@@ -417,12 +422,7 @@ namespace xpra
         }
         private void OnSettingsCancel(object obj)
         {
-            if (SelectedAp == null)
-            {
-                Message = "Invalid drive";
-                return;
-            }
-
+            
             //SelectedAp.Clone(OriginalDrive);
             //Message = "";
             //IsDriveNew = false;
@@ -438,11 +438,7 @@ namespace xpra
         
         private async void OnSettingsDelete(object obj)
         {
-            if (SelectedAp == null)
-            {
-                Message = "Invalid drive";
-                return;
-            }
+           
 
             //Ap d = SelectedAp;
             //if (GoldDriveList.Contains(d))
@@ -475,6 +471,14 @@ namespace xpra
                 //settings.AddApps(Aps.ToList());
                 //_apService.SaveSettings(settings);
             }
+        }
+
+        private async void OnRunApp(string appname)
+        {
+            WorkStart($"Running {appname}...");
+            var status = new Progress<string>(ReportStatus);
+            ReturnBox r = await Task.Run(() => _apService.RunAp(appname, status));
+            WorkDone(r);
         }
 
 
@@ -518,7 +522,7 @@ namespace xpra
                             }
                             if (CurrentPage == Page.Main)
                             {
-                                CheckDriveStatusAsync();
+                                CheckApStatusAsync();
                             }
                         },
                         // can execute
@@ -654,26 +658,36 @@ namespace xpra
             }
         }
 
+
+        private ICommand _runApCommand;
+        public ICommand RunApCommand
+        {
+            get
+            {
+                return _runApCommand ??
+                   (_runApCommand = new RelayCommand(
+                       x =>
+                       {
+                           var appname = x.ToString();
+                           OnRunApp(appname);
+                       },
+                       // can execute
+                       x =>
+                       {
+                           return true;
+                       }));
+            }
+        }
+
         #endregion
 
         #region events
-        
+
         protected virtual void OnFocusRequested(string propertyName)
         {
             FocusRequested?.Invoke(this, new FocusRequestedEventArgs(propertyName));
         }
         
-        public void OnComboChanged()
-        {            
-            if (!Loaded)
-                return;
-            if (SkipComboChanged)
-                return;
-            if (CurrentPage == Page.Settings)
-                return;
-            
-            CheckDriveStatusAsync();
-        }
 
         #endregion
 

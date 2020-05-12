@@ -4,8 +4,8 @@
     {
         public ReturnBox()
         {
-            MountStatus = MountStatus.UNKNOWN;
-            DriveStatus = DriveStatus.UNKNOWN;
+            ConnectStatus = ConnectStatus.UNKNOWN;
+            ApStatus = ApStatus.UNKNOWN;
             Success = false;
             ExitCode = -999;
         }
@@ -14,7 +14,7 @@
         public string Output { get; set; }
         public int ExitCode { get; set; }
         public bool Success { get; set; }
-        public MountStatus MountStatus { get; set; }
-        public DriveStatus DriveStatus { get; set; }
+        public ConnectStatus ConnectStatus { get; set; }
+        public ApStatus ApStatus { get; set; }
     }
 }

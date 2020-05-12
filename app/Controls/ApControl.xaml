@@ -10,8 +10,51 @@
     d:DesignHeight="300"
     d:DesignWidth="300">
     <Grid>
-        <ListBox ItemsSource="{Binding AppList}" 
-                 SelectedItem="{Binding SelectedApp}" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="40" />
+        </Grid.RowDefinitions>
 
+        <ListBox ItemsSource="{Binding Aps}" HorizontalContentAlignment="Stretch">
+            
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                    <Grid d:DesignWidth="384.268" d:DesignHeight="100.705">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Height="Auto" >
+                            <StackPanel.Resources>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Setter Property="Margin" Value="0,10,0,0"/>
+                                </Style>
+                            </StackPanel.Resources>
+                            <TextBlock Text="{Binding Name}" FontSize="30"/>
+                            <TextBlock Text="{Binding Path}"/>
+                            <TextBlock Text="{Binding Status}"/>
+                        </StackPanel>
+                        <Button Content="Run" Grid.Column="1" Height="50"
+                                Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListBox}},
+                                  Path=DataContext.RunApCommand}" 
+                                CommandParameter="{Binding Name}" />
+                    </Grid>
+                        <Border Height="2" Margin="0,5,0,0" BorderThickness="0 0 0 1"
+                                BorderBrush="{DynamicResource MaterialDesignDivider}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel Grid.Row="1">
+            <TextBlock Text="{Binding Message}"
+                       Visibility="{Binding IsWorking, Converter={local:BoolToVis}}"   />
+            <Grid Height="20">
+                <ProgressBar Height="4"
+                             Visibility="{Binding IsWorking, Converter={local:BoolToVis}}"                    
+                             IsIndeterminate="True"/>
+            </Grid>
+        </StackPanel>
     </Grid>
 </UserControl>
