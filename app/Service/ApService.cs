@@ -349,6 +349,22 @@ namespace xpra
             return r;
         }
 
+
+        public void GetProcesses()
+        {
+            string cmd = "";
+            foreach (var p in Process.GetProcesses())
+            {
+                if (p.ProcessName.Contains("Xpra_cmd"))
+                {
+                    cmd = ProcCmdLine.GetCommandLineOfProcess(p);
+
+                }
+
+
+            }
+        }
+
         #endregion
 
         #region SSH Management

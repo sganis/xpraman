@@ -262,10 +262,15 @@ namespace xpra
 
         public async void LoadApsAsync()
         {
+            
+
             Loaded = false;
             WorkStart("Loading apps...");
             await Task.Run(() =>
             {
+                _apService.GetProcesses();
+
+
                 Settings settings = _apService.LoadSettings();
                 _apService.UpdateAps(settings);
                 Host = settings.Host;
