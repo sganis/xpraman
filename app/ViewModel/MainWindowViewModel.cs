@@ -268,7 +268,7 @@ namespace xpra
             WorkStart("Loading apps...");
             await Task.Run(() =>
             {
-                _apService.GetProcesses();
+                //_apService.GetProcesses();
 
 
                 Settings settings = _apService.LoadSettings();
@@ -480,6 +480,10 @@ namespace xpra
 
         private async void OnRunApp(string appname)
         {
+
+
+            _apService.Detach(102);
+
             WorkStart($"Running {appname}...");
             var status = new Progress<string>(ReportStatus);
             ReturnBox r = await Task.Run(() => _apService.RunAp(appname, status));

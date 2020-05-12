@@ -364,7 +364,24 @@ namespace xpra
 
             }
         }
+        public void Detach(int display)
+        {
+            string cmd = "";
+            foreach (var p in Process.GetProcesses())
+            {
+                if (p.ProcessName.Contains("Xpra_cmd"))
+                {
+                    cmd = ProcCmdLine.GetCommandLineOfProcess(p);
+                    if (Regex.IsMatch(cmd, $@"attach ssh://.+/{display} --exit-with-children"))
+                    {
+                        p.Kill();
+                        break;
+                    }
+                }
 
+
+            }
+        }
         #endregion
 
         #region SSH Management
