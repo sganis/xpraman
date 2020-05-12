@@ -1,0 +1,84 @@
+﻿<UserControl
+    x:Class="xpra.HostControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:local="clr-namespace:xpra"
+    mc:Ignorable="d"
+    Loaded="UserControl_Loaded"
+    >
+    
+    <StackPanel
+        IsEnabled="{Binding IsWorking, Converter={local:NegateBoolConverter}}"
+        Margin="50 0">
+
+        
+        <Grid Margin="0,0,0,30">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock
+                    Text="Server"
+                    Style="{StaticResource Title}" />
+                <TextBox
+                    Name="txtHost"
+                    Text="{Binding SelectedDrive.Host}"                       
+                    local:EnterKeyHelper.EnterKeyCommand="{Binding ConnectHostCommand}"
+                    FontSize="20" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Margin="20,0,0,0" Width="80">
+                <TextBlock
+                    Text="Port"
+                    Style="{StaticResource Title}" />
+                <TextBox
+                    Text="{Binding SelectedDrive.Port}"
+                    local:EnterKeyHelper.EnterKeyCommand="{Binding ConnectHostCommand}"
+                    materialDesign:HintAssist.Hint="22"
+                    FontSize="20" />
+            </StackPanel>
+        </Grid>
+        
+        <TextBlock
+            Text="Username"
+            Style="{StaticResource Title}" />
+        <TextBox
+            Text="{Binding SelectedDrive.User}"
+            materialDesign:HintAssist.Hint="{Binding CurrentUser}"
+            local:EnterKeyHelper.EnterKeyCommand="{Binding ConnectHostCommand}"
+            Margin="0,0,0,30"
+            FontSize="20" />
+               
+        <StackPanel
+            Orientation="Horizontal"
+            HorizontalAlignment="Right">
+            <Button
+                Content="Cancel"
+                Command="{Binding ShowPageCommand}"
+                CommandParameter="{x:Static local:Page.Main}"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                Margin="5 0" 
+                Width="80" />
+            <Button
+                Content="Connect"
+                Command="{Binding ConnectHostCommand}"
+                Width="90" />
+        </StackPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+            <ProgressBar 
+                Visibility="{Binding IsWorking, Converter={local:BoolToVis}}"                    
+                IsIndeterminate="True"/>
+        </Grid>
+        <TextBlock
+            TextWrapping="Wrap"
+            Text="{Binding Message}"
+            Foreground="{Binding MessageColor}"
+            VerticalAlignment="Top"/>
+    </StackPanel>
+</UserControl>

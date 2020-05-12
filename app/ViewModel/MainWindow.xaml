@@ -1,0 +1,125 @@
+﻿<Window x:Class="xpra.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:local="clr-namespace:xpra"
+    mc:Ignorable="d"
+    TextElement.FontWeight="Medium"
+    TextElement.FontSize="14"
+    WindowStartupLocation="CenterScreen"
+    Title="Xpra App Manager"
+    MaxWidth="800"
+    MinWidth="450"
+    MinHeight="600"
+    Width="550"
+    Height="700"
+    Icon="/xpra-app;component/xpra.ico" 
+    TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+    TextOptions.TextFormattingMode="Ideal"
+    TextOptions.TextRenderingMode="Auto"
+    Background="{DynamicResource MaterialDesignPaper}"
+    FontFamily="{DynamicResource MaterialDesignFont}"
+    Closing="Window_Closing"
+    >
+    <Window.Resources>
+
+    </Window.Resources>
+ 
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="56" />
+        </Grid.RowDefinitions>
+
+        <materialDesign:ColorZone
+            Mode="PrimaryMid"
+            Height="60" 
+            Padding="5">
+            
+            <DockPanel>
+                <materialDesign:PopupBox
+                    DockPanel.Dock="Right"
+                    PlacementMode="BottomAndAlignRightEdges">
+                    <StackPanel>
+                        <Button
+                            Content="Settings"
+                            Command="{Binding ShowPageCommand}"
+                            CommandParameter="{x:Static local:Page.Settings}" />
+                        <Button
+                            Content="Open Terminal"
+                            Command="{Binding RunTerminalCommand}" />
+                        <Button
+                            Content="Open Logs Folder"
+                            Command="{Binding OpenLogsFolderCommand}" />
+                        <Button
+                            Content="About"
+                            Command="{Binding ShowPageCommand}"
+                            CommandParameter="{x:Static local:Page.About}" />
+                    </StackPanel>
+                </materialDesign:PopupBox>
+                <Grid Visibility="{Binding HasBack, Converter={local:BoolToVis}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="55" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        Width="40"
+                        Height="40"
+                        Padding="0"
+                        Margin="15,0,0,0"
+                        Command="{Binding ShowPageCommand}"
+                        CommandParameter="{x:Static local:Page.Main}"
+                        Style="{StaticResource MaterialDesignFlatMidBgButton}">
+                        <materialDesign:PackIcon 
+                            Kind="ArrowBack" Width="30" Height="30" />
+                    </Button>
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        Margin="16 0 0 0" 
+                        Text="{Binding Title}" />
+                </Grid>
+            </DockPanel>
+        </materialDesign:ColorZone>
+        <Grid
+            Grid.Row="1"
+            Margin="30,20">
+
+            <!-- Ap page-->
+            <Grid
+                Visibility="{Binding CurrentPage, 
+                            Converter={local:PageToVis}, 
+                            ConverterParameter={x:Static local:Page.Main}}">
+                <local:ApControl />
+
+            </Grid>
+            <!-- Host page-->
+            <StackPanel
+                Visibility="{Binding CurrentPage,
+                            Converter={local:PageToVis}, 
+                            ConverterParameter={x:Static local:Page.Host}}">
+                <local:HostControl />
+            </StackPanel>
+            <!-- Login page-->
+            <StackPanel
+                Visibility="{Binding CurrentPage, 
+                            Converter={local:PageToVis}, 
+                            ConverterParameter={x:Static local:Page.Password}}">
+                <local:PasswordControl />
+            </StackPanel>
+
+            
+            <!-- About page-->
+            <StackPanel
+                Visibility="{Binding CurrentPage, 
+                            Converter={local:PageToVis}, 
+                            ConverterParameter={x:Static local:Page.About}}">
+                <local:AboutControl />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
