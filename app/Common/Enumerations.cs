@@ -11,8 +11,8 @@
     public enum ApStatus
     {
         NOT_RUNNING,
+        IDLE,
         RUNNING,
-        ATTACHED,
         UNKNOWN,
     }
     public enum ConnectStatus

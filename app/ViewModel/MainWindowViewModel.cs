@@ -196,12 +196,19 @@ namespace xpra
             //Messenger.Default.Register<string>(this, OnShowView);
 
 
+        
 
             var name = "PATH";
             var scope = EnvironmentVariableTarget.User; // or User
             var oldValue = Environment.GetEnvironmentVariable(name, scope);
             var newValue = @"C:\Xpra-Client-Python3-x86_64_4.0-r26306;" + oldValue;
             Environment.SetEnvironmentVariable(name, newValue, scope);
+
+            // Monitor
+            System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
+            dispatcherTimer.Tick += dispatcherTimer_Tick;
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 5);
+            dispatcherTimer.Start();
 
             CurrentPage = Page.Main;
             LoadApsAsync();
@@ -210,7 +217,17 @@ namespace xpra
                 Message = rb.Error;           
         }
 
-        
+        private async void dispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            await Task.Run(() =>
+            {
+                var apsServer = _apService.GetApsServer();
+                var apsLocal = _apService.GetApsLocal();
+                
+            });
+            foreach (var ap in Aps)
+                ap.Status = ApStatus.IDLE;
+        }
 
         #endregion
 
@@ -329,9 +346,9 @@ namespace xpra
         {
             //if (SelectedAp != null)
             //{
-            //    //WorkStart("Checking status...");
-            //    //ReturnBox r = await Task.Run(() => _apService.CheckDriveStatus(SelectedAp));
-            //    //WorkDone(r);
+            //    WorkStart("Checking status...");
+            //    ReturnBox r = await Task.Run(() => _apService.CheckDriveStatus(SelectedAp));
+            //    WorkDone(r);
             //}
         }
 
@@ -482,7 +499,7 @@ namespace xpra
         {
 
 
-            _apService.Detach(102);
+            //_apService.Detach(102);
 
             WorkStart($"Running {appname}...");
             var status = new Progress<string>(ReportStatus);

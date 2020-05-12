@@ -364,6 +364,15 @@ namespace xpra
 
             }
         }
+        public List<Ap> GetApsServer()
+        {
+            return new List<Ap>();
+        }
+        public List<Ap> GetApsLocal()
+        {
+            return new List<Ap>();
+        }
+
         public void Detach(int display)
         {
             string cmd = "";
@@ -591,17 +600,7 @@ namespace xpra
 
         #region Connection Management
 
-        //public ReturnBox Connect(string host, int port, string username, IProgress<string> status)
-        //{
-        //    ReturnBox r = new ReturnBox();
-            
-        //    status?.Report("Checking server...");
-        //    r = TestHost(host, port);
-        //    if (r.ConnectStatus != ConnectStatus.OK)
-        //        return r;
-        //    status?.Report("Authenticating...");
-        //    return TestSsh(host, port, username);
-        //}
+        
         public ReturnBox ConnectPassword(string host, int port, string username, string password, IProgress<string> status)
         {
             status?.Report("Connecting...");

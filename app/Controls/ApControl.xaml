@@ -35,11 +35,19 @@
                             <TextBlock Text="{Binding Path}"/>
                             <TextBlock Text="{Binding Status}"/>
                         </StackPanel>
-                        <Button Content="Run" Grid.Column="1" Height="50"
-                                Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListBox}},
-                                  Path=DataContext.RunApCommand}" 
-                                CommandParameter="{Binding Name}" />
-                    </Grid>
+                            <Button Content="{Binding RunButtonText}"
+                                    Grid.Column="1" Height="50"
+                                    Background="{Binding RunButtonColor }"
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListBox}},
+                                        Path=DataContext.RunApCommand}" 
+                                    CommandParameter="{Binding Name}" >
+                                <!--<Button.Resources>
+                                    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#F44336"/>
+                                    <SolidColorBrush x:Key="SecondaryAccentForegroundBrush" Color="#E57373"/>
+                                </Button.Resources>-->
+
+                            </Button>
+                        </Grid>
                         <Border Height="2" Margin="0,5,0,0" BorderThickness="0 0 0 1"
                                 BorderBrush="{DynamicResource MaterialDesignDivider}"/>
                     </StackPanel>
