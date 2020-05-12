@@ -334,6 +334,7 @@ namespace xpra
             if (!ok)
             {
                 r.Error = _apService.Error;
+                r.ConnectStatus = ConnectStatus.BAD_HOST;
             }
             else
             {
