@@ -24,7 +24,7 @@ namespace xpra
         #region Properties
 
         
-        public ObservableCollection<Connection> ConnectionList { get; } = new ObservableCollection<Connection>();
+        public ObservableCollection<Connection> ConnectionList { get; set; } = new ObservableCollection<Connection>();
         public Connection SelectedConnection { get; set; } = new Connection();
         
 
@@ -184,12 +184,8 @@ namespace xpra
             r = conn.TestSsh();
             if (r.ConnectStatus != ConnectStatus.OK)
                 return r;
-            r = conn.Connect();
-            if (r.ConnectStatus != ConnectStatus.OK)
-                return r;
-            ConnectionList.Add(conn);
-            NotifyPropertyChanged("ConnectionList");
-            return r;
+            return conn.Connect();
+            
         }
         public ReturnBox ConnectPassword(Connection conn, string password, IProgress<string> status)
         {

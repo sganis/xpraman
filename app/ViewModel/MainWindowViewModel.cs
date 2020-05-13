@@ -50,6 +50,7 @@ namespace xpra
         }
         public ObservableCollection<Connection> ConnectionList { 
             get { return MainService.ConnectionList; }
+            set { MainService.ConnectionList = value;  }
         }
 
         //public bool HasApps
@@ -256,6 +257,12 @@ namespace xpra
             WorkStart("Connecting...");
             var status = new Progress<string>(ReportStatus);
             ReturnBox r = await Task.Run(() => MainService.Connect(SelectedConnection, status));
+            if (r.ConnectStatus == ConnectStatus.OK)
+            {
+                SelectedConnection = r.Connection;
+                ConnectionList.Add(SelectedConnection);
+                NotifyPropertyChanged("ConnectionList");
+            }
             WorkDone(r);
         }
 

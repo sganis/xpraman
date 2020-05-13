@@ -21,7 +21,6 @@
         <ComboBox
                 ItemsSource="{Binding ConnectionList}" 
                 SelectedItem="{Binding SelectedConnection}"
-                DisplayMemberPath="ComboDisplay"
                 materialDesign:HintAssist.FloatingScale="0.50"
                 Style="{StaticResource MaterialDesignFloatingHintComboBox}"
                 SelectionChanged="ComboBox_SelectionChanged"

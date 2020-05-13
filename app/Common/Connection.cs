@@ -208,6 +208,7 @@ namespace xpra
 
                 rb.Success = true;
                 rb.ConnectStatus = ConnectStatus.OK;
+                rb.Connection = this;
 
             }
             catch (SshAuthenticationException ex)
@@ -427,6 +428,11 @@ namespace xpra
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return $"{ CurrentUser }@{Host}:{CurrentPort}"; ;
+        }
     }
 
     //public class ConnectionList : List<Connection>
