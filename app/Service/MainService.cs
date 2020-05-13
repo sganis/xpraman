@@ -141,13 +141,44 @@ namespace xpra
 
             }
         }
-        public List<Ap> GetApsServer()
+        public List<Ap> GetApsServer(Connection conn)
         {
-            return new List<Ap>();
+            var apps = new List<Ap>();
+            var r = conn.RunRemote("ps aux |grep -v grep|grep \"xpra start\"");
+            foreach (var line in r.Output.Split('\n'))
+            {
+                var m = Regex.Match(line, $@"xpra start :([0-9]+).+--start-child=(.+) ");
+                if (m.Success)
+                {
+                    int display = int.Parse(m.Groups[1].Value);
+                    string appname = m.Groups[2].Value;
+                    var app = new Ap();
+                    app.Display = display;
+                    app.Name = appname;
+                    app.Status = ApStatus.IDLE;
+                    apps.Add(app);
+                }
+            }
+            return apps;
         }
-        public List<Ap> GetApsLocal()
+        public List<Ap> GetApsLocal(Connection conn)
         {
-            return new List<Ap>();
+            var apps = new List<Ap>();
+            foreach (var p in Process.GetProcesses())
+            {
+                if (p.ProcessName.Contains("Xpra_cmd"))
+                {
+                    string cmdline = ProcCmdLine.GetCommandLineOfProcess(p);
+                    var m = Regex.Match(cmdline, $@"attach .+ ssh://.+/([0-9]+) ");
+                    if (m.Success)
+                    {
+                        var app = new Ap();
+                        app.Display = int.Parse(m.Groups[1].Value);
+                        apps.Add(app);
+                    }
+                }
+            }
+            return apps;
         }
 
         public void Detach(int display)

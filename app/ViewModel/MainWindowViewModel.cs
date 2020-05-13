@@ -17,7 +17,7 @@ namespace xpra
         public event EventHandler<FocusRequestedEventArgs> FocusRequested;
 
         private MainService MainService { get; } = new MainService();
-
+        public bool IsCheckingStatus { get; set; }
         public bool Loaded { get; set; }
         public bool SkipComboChanged { get; set; }
 
@@ -149,14 +149,23 @@ namespace xpra
 
         private async void dispatcherTimer_Tick(object sender, EventArgs e)
         {
+            if (IsCheckingStatus)
+                return;
+            if (SelectedConnection == null)
+                return;
+
+            IsCheckingStatus = true;
             await Task.Run(() =>
             {
-                var apsServer = MainService.GetApsServer();
-                var apsLocal = MainService.GetApsLocal();
+                var apsServer = MainService.GetApsServer(SelectedConnection);
+                var apsLocal = MainService.GetApsLocal(SelectedConnection);
                 
             });
-            foreach (var ap in MainService.SelectedConnection.ApList)
+
+            foreach (var ap in SelectedConnection.ApList)
                 ap.Status = ApStatus.IDLE;
+            IsCheckingStatus = false;
+
         }
 
         #endregion
@@ -380,7 +389,7 @@ namespace xpra
             //IsDriveNew = true;            
         }
         
-        private async void OnSettingsDelete(object obj)
+        private void OnSettingsDelete(object obj)
         {
            
 
