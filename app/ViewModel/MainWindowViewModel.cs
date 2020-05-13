@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace xpra
 {
@@ -154,11 +155,14 @@ namespace xpra
             if (SelectedConnection == null)
                 return;
 
+            List<Ap> apsServer = null;
+            List<Ap> apsLocal = null;
+
             IsCheckingStatus = true;
             await Task.Run(() =>
             {
-                var apsServer = MainService.GetApsServer(SelectedConnection);
-                var apsLocal = MainService.GetApsLocal(SelectedConnection);
+                apsServer = MainService.GetApsServer(SelectedConnection);
+                apsLocal = MainService.GetApsLocal(SelectedConnection);
                 
             });
 
