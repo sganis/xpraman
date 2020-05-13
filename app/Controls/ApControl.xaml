@@ -12,10 +12,10 @@
     <Grid IsEnabled="{Binding IsWorking, Converter={local:NegateBoolConverter}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+ 
         </Grid.RowDefinitions>
 
         <ComboBox
@@ -27,25 +27,24 @@
                 FontSize="24">
         </ComboBox>
         <DockPanel Grid.Row="1">
-        <TextBlock DockPanel.Dock="Left"
-                Text="{Binding SelectedConnection.UrlDisplay}"
-                Margin="0,10" />
-        <Button Content="Settings"
+            <TextBlock DockPanel.Dock="Left"
+                    Text="{Binding SelectedConnection.UrlDisplay}"
+                    Margin="0,10" />
+            <!--<Button Content="Settings"
                 DockPanel.Dock="Right"
                 Command="{Binding ShowPageCommand}"
                 CommandParameter="{x:Static local:Page.Settings}"
                 Style="{StaticResource MaterialDesignFlatButton}"
-                HorizontalAlignment="Right"/>
-        <Button Content="Connect"
+                HorizontalAlignment="Right"/>-->
+            <Button Content="{Binding SelectedConnection.ConnectButtonText}"
                 DockPanel.Dock="Right"
                 Margin="0,0,10,0"
-                Command="{Binding ShowPageCommand}"
-                CommandParameter="{x:Static local:Page.Settings}"
+                Command="{Binding ConnectDisconnectCommand}"
                 Style="{StaticResource MaterialDesignFlatButton}"
                 HorizontalAlignment="Right" />
         </DockPanel>
         <ListBox Grid.Row="2"
-                 ItemsSource="{Binding Aps}" HorizontalContentAlignment="Stretch">            
+                 ItemsSource="{Binding SelectedConnection.ApList}" HorizontalContentAlignment="Stretch">            
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel>

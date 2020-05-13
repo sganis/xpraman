@@ -1,0 +1,18 @@
+﻿{
+  "connections": [
+  	{
+  		"url" : "ssh://sant@192.168.100.201:22",
+  		"nickname": "",
+  		"apps" : [
+  			{
+  				"name" : "Text Editor",
+  				"path" : "gedit",
+  			},
+  			{
+  				"name" : "Browser",
+  				"path" : "firefox",
+  			},
+  		],
+  	},
+  ],
+}

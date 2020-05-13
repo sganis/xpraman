@@ -51,8 +51,15 @@ namespace xpra
 
         public void UpdateFromSettings(Settings settings)
         {
-            foreach (var c in settings.ConnectionList)
-                ConnectionList.Add(c);
+            if (settings.ConnectionList.Count > 0) {
+                foreach (var c in settings.ConnectionList)
+                    ConnectionList.Add(c);
+
+                SelectedConnection = ConnectionList.Where(x => x.Default).FirstOrDefault();
+                if (SelectedConnection == null)
+                    SelectedConnection = ConnectionList.First();            
+            }
+
         }
 
         public Settings LoadSettings()
@@ -187,6 +194,18 @@ namespace xpra
             return conn.Connect();
             
         }
+
+        public ReturnBox Disconnect(Connection conn, IProgress<string> status)
+        {
+            ReturnBox r = new ReturnBox();
+            if (conn == null)
+            {
+                r.ConnectStatus = ConnectStatus.BAD_HOST;
+                return r;
+            }
+            return conn.Disconnect();
+        }
+
         public ReturnBox ConnectPassword(Connection conn, string password, IProgress<string> status)
         {
             status?.Report("Connecting...");

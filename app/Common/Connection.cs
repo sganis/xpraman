@@ -18,8 +18,33 @@ namespace xpra
     {
         const int TIMEOUT = 20; // secs
 
-        public string Url { get; set; }
+        string _url;
+        public string Url
+        {
+            get { return _url; }
+            set {
+                _url = value;
+                if (!string.IsNullOrEmpty(_url))
+                {
+                    string aux = _url.Replace("ssh://", "");
+                    Host = aux;
+                    if (aux.Contains("@"))
+                    {
+                        User = aux.Split('@')[0];
+                        aux = aux.Split('@')[1];
+                        Host = aux;
+                    }
+                    if (aux.Contains(":"))
+                    {
+                        Host = aux.Split(':')[0];
+                        Port = aux.Split(':')[1];
+                    }
+
+                }
+            }
+        }
         public string Nickname { get; set; }
+        public bool Default { get; set; }
         public List<Ap> ApList { get; set; }
         public SshClient Ssh { get; set; }
         
@@ -123,6 +148,8 @@ namespace xpra
             get { return Environment.UserName.ToLower(); }
         }
 
+        public string ConnectButtonText => 
+            Connected ? "DISCONNECT" : "CONNECT";
 
         public Connection()
         {
@@ -209,6 +236,8 @@ namespace xpra
                 rb.Success = true;
                 rb.ConnectStatus = ConnectStatus.OK;
                 rb.Connection = this;
+                //NotifyPropertyChanged("Connected");
+                //NotifyPropertyChanged("ConnectButtonText");
 
             }
             catch (SshAuthenticationException ex)
@@ -216,6 +245,26 @@ namespace xpra
                 // bad key
                 rb.Error = ex.Message;
                 rb.ConnectStatus = ConnectStatus.BAD_KEY;
+            }
+            catch (Exception ex)
+            {
+                rb.Error = ex.Message;
+                rb.ConnectStatus = ConnectStatus.BAD_HOST;
+            }
+            return rb;
+        }
+        public ReturnBox Disconnect()
+        {
+            ReturnBox rb = new ReturnBox();
+            try
+            {
+                Ssh.Disconnect();
+                rb.Success = true;
+                rb.ConnectStatus = ConnectStatus.OK;
+                rb.Connection = this;
+                //NotifyPropertyChanged("Connected");
+                //NotifyPropertyChanged("ConnectButtonText");
+
             }
             catch (Exception ex)
             {

@@ -114,6 +114,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <None Include="config.json" />
     <Compile Include="Common\Connection.cs" />
     <Compile Include="Common\IRequestFocus.cs" />
     <Compile Include="Common\ProcCmdLine.cs" />

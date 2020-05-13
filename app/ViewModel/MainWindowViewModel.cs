@@ -46,11 +46,18 @@ namespace xpra
 
         public Connection SelectedConnection { 
             get { return MainService.SelectedConnection; }
-            set { MainService.SelectedConnection = value;  }
+            set 
+            { 
+                MainService.SelectedConnection = value;
+                NotifyPropertyChanged();
+            }
         }
         public ObservableCollection<Connection> ConnectionList { 
             get { return MainService.ConnectionList; }
-            set { MainService.ConnectionList = value;  }
+            set { 
+                MainService.ConnectionList = value;
+                NotifyPropertyChanged();
+            }
         }
 
         //public bool HasApps
@@ -99,12 +106,6 @@ namespace xpra
             }
         }
         
-        //public string ConnectButtonText => 
-        //    (DriveStatus == DriveStatus.CONNECTED 
-        //    || DriveStatus == DriveStatus.BROKEN ) ? "Disconnect" : "Connect";
-        //public string ConnectButtonColor => DriveStatus == DriveStatus.CONNECTED ? "#689F38" : "#607d8b";
-        //public bool ConnectButtonIsEnabled => true;
-        //public bool IsSettingsChanged { get; set; }
 
         private string message;
         public string Message
@@ -112,14 +113,7 @@ namespace xpra
             get { return message; }
             set { message = value; NotifyPropertyChanged(); }
         }
-        public Brush MessageColor
-        {
-            get
-            {
-                return Brushes.Black;
-                //return MountStatus == MountStatus.OK ? Brushes.Black : Brushes.Red;
-            }
-        }
+
         private string password;
         public string Password
         {
@@ -147,7 +141,7 @@ namespace xpra
             dispatcherTimer.Start();
 
             CurrentPage = Page.Main;
-            LoadApsAsync();
+            LoadSettingsAsync();
             GetVersionsAsync();
             if (rb != null)
                 Message = rb.Error;           
@@ -212,7 +206,7 @@ namespace xpra
 
         }
 
-        public async void LoadApsAsync()
+        public async void LoadSettingsAsync()
         {
             Loaded = false;
             WorkStart("Loading apps...");
@@ -223,8 +217,7 @@ namespace xpra
             });
 
             MainService.UpdateFromSettings(settings);
-            //UpdateObservableAps();
-
+            
             if (MainService.ConnectionList.Count == 0)
             {
                 CurrentPage = Page.Host;
@@ -234,18 +227,10 @@ namespace xpra
             else
             {
                 ConnectAsync();
-                CheckApStatusAsync();
             }
             Loaded = true;
 
         }
-
-        //private void UpdateObservableAps()
-        //{
-        //    ConnectionList.Clear();
-        //    MainService.ConnectionList.ForEach(ConnectionList.Add);            
-        //    NotifyPropertyChanged("Aps");
-        //}
 
         void ReportStatus(string message)
         {
@@ -260,21 +245,23 @@ namespace xpra
             if (r.ConnectStatus == ConnectStatus.OK)
             {
                 SelectedConnection = r.Connection;
-                ConnectionList.Add(SelectedConnection);
-                NotifyPropertyChanged("ConnectionList");
+                //ConnectionList.Add(SelectedConnection);
+                //NotifyPropertyChanged("ConnectionList");
             }
             WorkDone(r);
         }
-
-        private async void CheckApStatusAsync()
+        private async void DisconnectAsync()
         {
-            //if (SelectedAp != null)
-            //{
-            //    WorkStart("Checking status...");
-            //    ReturnBox r = await Task.Run(() => ConnectionService.CheckDriveStatus(SelectedAp));
-            //    WorkDone(r);
-            //}
+            WorkStart("Disconnecting...");
+            var status = new Progress<string>(ReportStatus);
+            ReturnBox r = await Task.Run(() => MainService.Disconnect(SelectedConnection, status));
+            if (r.ConnectStatus == ConnectStatus.OK)
+            {
+                SelectedConnection = r.Connection;
+            }
+            WorkDone(r);
         }
+        
 
         private async void GetVersionsAsync()
         {
@@ -286,7 +273,7 @@ namespace xpra
         #region Command methods
 
 
-        private async void OnConnect(object obj)
+        private void OnConnect(object obj)
         {
             if (IsWorking)
                 return;
@@ -305,7 +292,16 @@ namespace xpra
             ConnectAsync();
             
         }
+        private void OnConnectDisconnect(object obj)
+        {
+            if (SelectedConnection == null)
+                return;
+            if (SelectedConnection.Connected)
+                DisconnectAsync();
+            else
+                ConnectAsync();
 
+        }
         private void OnConnectHost(object obj)
         {
             if (string.IsNullOrEmpty(SelectedConnection.Host))
@@ -447,6 +443,17 @@ namespace xpra
                     (_connectCommand = new RelayCommand(OnConnect));
             }
         }
+
+        private ICommand _connectDisconnectCommand;
+        public ICommand ConnectDisconnectCommand
+        {
+            get
+            {
+                return _connectDisconnectCommand ??
+                    (_connectDisconnectCommand = new RelayCommand(OnConnectDisconnect));
+            }
+        }
+
         private ICommand _connectHostCommand;
         public ICommand ConnectHostCommand
         {
@@ -474,7 +481,7 @@ namespace xpra
                             }
                             if (CurrentPage == Page.Main)
                             {
-                                CheckApStatusAsync();
+                                //CheckApStatusAsync();
                             }
                         },
                         // can execute
