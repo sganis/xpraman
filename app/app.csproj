@@ -114,6 +114,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Common\Connection.cs" />
     <Compile Include="Common\IRequestFocus.cs" />
     <Compile Include="Common\ProcCmdLine.cs" />
     <Compile Include="Common\RelayCommand.cs" />
@@ -172,7 +173,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Service\ApService.cs" />
+    <Compile Include="Service\MainService.cs" />
     <Compile Include="ViewModel\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

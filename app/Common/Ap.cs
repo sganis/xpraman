@@ -69,8 +69,4 @@ namespace xpra
         
     }
 
-    public class DriveList : List<Ap>
-    {
-        public DriveList() { }
-    }
 }

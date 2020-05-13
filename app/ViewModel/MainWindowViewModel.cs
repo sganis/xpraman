@@ -16,7 +16,7 @@ namespace xpra
 
         public event EventHandler<FocusRequestedEventArgs> FocusRequested;
 
-        private ApService _apService;
+        private MainService MainService { get; } = new MainService();
 
         public bool Loaded { get; set; }
         public bool SkipComboChanged { get; set; }
@@ -43,16 +43,22 @@ namespace xpra
         }
         public bool HasBack { get; set; }
         public string Title { get; set; }
-        
-        public ObservableCollection<Ap> Aps { get; set; } = new ObservableCollection<Ap>();
-        
-        public bool HasApps
-        { 
-            get 
-            { 
-                return _apService.Aps != null && _apService.Aps.Count > 0; 
-            }
+
+        public Connection SelectedConnection { 
+            get { return MainService.SelectedConnection; }
+            set { MainService.SelectedConnection = value;  }
         }
+        public ObservableCollection<Connection> ConnectionList { 
+            get { return MainService.ConnectionList; }
+        }
+
+        //public bool HasApps
+        //{ 
+        //    get 
+        //    { 
+        //        return ConnectionService.Aps != null && ConnectionService.Aps.Count > 0; 
+        //    }
+        //}
 
         private ApStatus apStatus;
         public ApStatus ApStatus
@@ -119,71 +125,6 @@ namespace xpra
             get { return password; }
             set { password = value; NotifyPropertyChanged(); }
         }
-        private string _host;
-        public string Host
-        {
-            get { return _host; }
-            set
-            {
-                if (_host != value)
-                {
-                    _host = value;
-                    NotifyPropertyChanged();
-                }
-
-            }
-        }
-
-        private string user;
-        public string User
-        {
-            get { return user; }
-            set
-            {
-                if (user != value)
-                {
-                    user = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
-
-
-        private string port;
-        public string Port
-        {
-            get { return port; }
-            set
-            {
-                if (port != value)
-                {
-                    port = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
-        public int CurrentPort
-        {
-            get
-            {
-                int port = int.Parse("0" + Port);
-                if (port == 0)
-                    port = 22;
-                return port;
-            }
-        }
-
-        public string CurrentUser
-        {
-            get
-            {
-                return string.IsNullOrEmpty(User) ? EnvironmentUser : User;
-            }
-        }
-        public string EnvironmentUser
-        {
-            get { return Environment.UserName.ToLower(); }
-        }
         
         
         #endregion
@@ -192,12 +133,6 @@ namespace xpra
 
         public MainWindowViewModel(ReturnBox rb)
         {
-            _apService = new ApService();
-            //Messenger.Default.Register<string>(this, OnShowView);
-
-
-        
-
             var name = "PATH";
             var scope = EnvironmentVariableTarget.User; // or User
             var oldValue = Environment.GetEnvironmentVariable(name, scope);
@@ -221,11 +156,11 @@ namespace xpra
         {
             await Task.Run(() =>
             {
-                var apsServer = _apService.GetApsServer();
-                var apsLocal = _apService.GetApsLocal();
+                var apsServer = MainService.GetApsServer();
+                var apsLocal = MainService.GetApsLocal();
                 
             });
-            foreach (var ap in Aps)
+            foreach (var ap in MainService.SelectedConnection.ApList)
                 ap.Status = ApStatus.IDLE;
         }
 
@@ -257,8 +192,7 @@ namespace xpra
             {
                 case ConnectStatus.BAD_HOST:
                     CurrentPage = Page.Host;
-                    OnFocusRequested(nameof(
-                        Host));
+                    OnFocusRequested("Host");
                     break;
                 case ConnectStatus.BAD_PASSWORD:
                 case ConnectStatus.BAD_KEY:
@@ -279,29 +213,21 @@ namespace xpra
 
         public async void LoadApsAsync()
         {
-            
-
             Loaded = false;
             WorkStart("Loading apps...");
+            Settings settings = null;
             await Task.Run(() =>
             {
-                //_apService.GetProcesses();
-
-
-                Settings settings = _apService.LoadSettings();
-                _apService.UpdateAps(settings);
-                Host = settings.Host;
-                Port = settings.Port.ToString();
-                User = settings.User;
+                settings = MainService.LoadSettings();                
             });
-            
-            UpdateObservableAps();
 
-            if (_apService.Aps.Count == 0)
+            MainService.UpdateFromSettings(settings);
+            //UpdateObservableAps();
+
+            if (MainService.ConnectionList.Count == 0)
             {
                 CurrentPage = Page.Host;
-                OnFocusRequested(nameof(Host));
-                //SelectedAp = FreeDriveList.First();
+                OnFocusRequested("Host");
                 WorkDone();
             }
             else
@@ -313,12 +239,12 @@ namespace xpra
 
         }
 
-        private void UpdateObservableAps()
-        {
-            Aps.Clear();
-            _apService.Aps.ForEach(Aps.Add);            
-            NotifyPropertyChanged("Aps");
-        }
+        //private void UpdateObservableAps()
+        //{
+        //    ConnectionList.Clear();
+        //    MainService.ConnectionList.ForEach(ConnectionList.Add);            
+        //    NotifyPropertyChanged("Aps");
+        //}
 
         void ReportStatus(string message)
         {
@@ -328,18 +254,8 @@ namespace xpra
         private async void ConnectAsync()
         {
             WorkStart("Connecting...");
-            //var status = new Progress<string>(ReportStatus);
-            bool ok = await Task.Run(() => _apService.Connect(Host, CurrentPort, CurrentUser));
-            ReturnBox r = new ReturnBox();
-            if (!ok)
-            {
-                r.Error = _apService.Error;
-                r.ConnectStatus = ConnectStatus.BAD_HOST;
-            }
-            else
-            {
-                r.Success = true;
-            }
+            var status = new Progress<string>(ReportStatus);
+            ReturnBox r = await Task.Run(() => MainService.Connect(SelectedConnection, status));
             WorkDone(r);
         }
 
@@ -348,14 +264,14 @@ namespace xpra
             //if (SelectedAp != null)
             //{
             //    WorkStart("Checking status...");
-            //    ReturnBox r = await Task.Run(() => _apService.CheckDriveStatus(SelectedAp));
+            //    ReturnBox r = await Task.Run(() => ConnectionService.CheckDriveStatus(SelectedAp));
             //    WorkDone(r);
             //}
         }
 
         private async void GetVersionsAsync()
         {
-            Version = await Task.Run(() => _apService.GetVersions());
+            Version = await Task.Run(() => MainService.GetVersions());
         }
 
         #endregion
@@ -370,7 +286,9 @@ namespace xpra
 
             Message = "";
 
-            if (Aps.Count == 0 || string.IsNullOrEmpty(Host))
+            if (SelectedConnection == null 
+                || SelectedConnection.ApList.Count == 0
+                || string.IsNullOrEmpty(SelectedConnection.Host))
             {
                 //IsDriveNew = true;
                 //SelectedAp = FreeDriveList.First();
@@ -383,10 +301,10 @@ namespace xpra
 
         private void OnConnectHost(object obj)
         {
-            if (string.IsNullOrEmpty(Host))
+            if (string.IsNullOrEmpty(SelectedConnection.Host))
             {
                 Message = "Server is required";
-                OnFocusRequested(nameof(Host));
+                OnFocusRequested(nameof(SelectedConnection.Host));
                 return;
             }
             ConnectAsync();
@@ -396,10 +314,10 @@ namespace xpra
         {           
             WorkStart("Connecting...");
             var status = new Progress<string>(ReportStatus);
-            ReturnBox r = await Task.Run(() => _apService.ConnectPassword(Host, CurrentPort, CurrentUser, password, status));
-            SkipComboChanged = true;
-            UpdateObservableAps();
-            SkipComboChanged = false;
+            ReturnBox r = await Task.Run(() => MainService.ConnectPassword(SelectedConnection, password, status));
+            //SkipComboChanged = true;
+            //UpdateObservableAps();
+            //SkipComboChanged = false;
             WorkDone(r);
         }
         
@@ -414,7 +332,7 @@ namespace xpra
         private async void OnSettingsSave(object obj)
         {
             
-            if (string.IsNullOrEmpty(Host))
+            if (string.IsNullOrEmpty(SelectedConnection.Host))
             {
                 Message = "Server is required";
                 OnFocusRequested("SelectedAp.Host");
@@ -422,8 +340,8 @@ namespace xpra
             }
 
             Regex hostRegex = new Regex(HostRegex);
-            if (!hostRegex.Match(Host).Success 
-                && !hostRegex.Match(Host).Success)
+            if (!hostRegex.Match(SelectedConnection.Host).Success 
+                && !hostRegex.Match(SelectedConnection.Host).Success)
             {
                 Message = "Invalid server name";
                 OnFocusRequested("SelectedAp.Host");
@@ -431,13 +349,13 @@ namespace xpra
             }
             await Task.Run(() =>
             {
-                Settings settings = _apService.LoadSettings();
+                Settings settings = MainService.LoadSettings();
                 //settings.AddDrive(SelectedAp);
-                _apService.SaveSettings(settings);
-                //_apService.UpdateDrives(settings);
+                MainService.SaveSettings(settings);
+                //ConnectionService.UpdateDrives(settings);
             });
 
-            UpdateObservableAps();
+            //UpdateObservableAps();
             Message = "";
             //IsDriveNew = false;
             //IsDriveEdit = false;
@@ -469,11 +387,11 @@ namespace xpra
             //await Task.Run(() =>
             //{
             //    if (d.Status == DriveStatus.CONNECTED)
-            //        _apService.Unmount(d);
-            //    Settings settings = _apService.LoadSettings();
+            //        ConnectionService.Unmount(d);
+            //    Settings settings = ConnectionService.LoadSettings();
             //    settings.AddDrives(GoldDriveList);
-            //    _apService.SaveSettings(settings);
-            //    _apService.UpdateDrives(settings);
+            //    ConnectionService.SaveSettings(settings);
+            //    ConnectionService.UpdateDrives(settings);
             //});
             //UpdateObservableDrives();
             //if(GoldDriveList.Count == 0)
@@ -487,24 +405,24 @@ namespace xpra
         }
         public void Closing(object obj)
         {
-            Settings settings = _apService.LoadSettings();
-            if (Aps != null)
-            {
-                //settings.Selected = SelectedAp != null ? SelectedAp.Name : "";
-                //settings.AddApps(Aps.ToList());
-                //_apService.SaveSettings(settings);
-            }
+            //Settings settings = ConnectionService.LoadSettings();
+            //if (Aps != null)
+            //{
+            //    //settings.Selected = SelectedAp != null ? SelectedAp.Name : "";
+            //    //settings.AddApps(Aps.ToList());
+            //    //ConnectionService.SaveSettings(settings);
+            //}
         }
 
         private async void OnRunApp(string appname)
         {
 
 
-            //_apService.Detach(102);
+            //ConnectionService.Detach(102);
 
             WorkStart($"Running {appname}...");
             var status = new Progress<string>(ReportStatus);
-            ReturnBox r = await Task.Run(() => _apService.RunAp(appname, status));
+            ReturnBox r = await Task.Run(() => MainService.RunAp(SelectedConnection, appname, status));
             WorkDone(r);
         }
 
@@ -681,7 +599,7 @@ namespace xpra
             {
                 return _openLogsFolderCommand ??
                     (_openLogsFolderCommand = new RelayCommand(
-                        url => System.Diagnostics.Process.Start("explorer.exe", _apService.LocalAppData)));
+                        url => System.Diagnostics.Process.Start("explorer.exe", MainService.LocalAppData)));
             }
         }
 
@@ -714,7 +632,18 @@ namespace xpra
         {
             FocusRequested?.Invoke(this, new FocusRequestedEventArgs(propertyName));
         }
-        
+        public void OnComboChanged()
+        {
+            if (!Loaded)
+                return;
+            if (SkipComboChanged)
+                return;
+            if (CurrentPage == Page.Settings)
+                return;
+
+           // CheckDriveStatusAsync();
+        }
+
 
         #endregion
 

@@ -9,14 +9,44 @@
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="300">
-    <Grid>
+    <Grid IsEnabled="{Binding IsWorking, Converter={local:NegateBoolConverter}}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="40" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <ListBox ItemsSource="{Binding Aps}" HorizontalContentAlignment="Stretch">
-            
+        <ComboBox
+                ItemsSource="{Binding ConnectionList}" 
+                SelectedItem="{Binding SelectedConnection}"
+                DisplayMemberPath="ComboDisplay"
+                materialDesign:HintAssist.FloatingScale="0.50"
+                Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                SelectionChanged="ComboBox_SelectionChanged"
+                FontSize="24">
+        </ComboBox>
+        <DockPanel Grid.Row="1">
+        <TextBlock DockPanel.Dock="Left"
+                Text="{Binding SelectedConnection.UrlDisplay}"
+                Margin="0,10" />
+        <Button Content="Settings"
+                DockPanel.Dock="Right"
+                Command="{Binding ShowPageCommand}"
+                CommandParameter="{x:Static local:Page.Settings}"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                HorizontalAlignment="Right"/>
+        <Button Content="Connect"
+                DockPanel.Dock="Right"
+                Margin="0,0,10,0"
+                Command="{Binding ShowPageCommand}"
+                CommandParameter="{x:Static local:Page.Settings}"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                HorizontalAlignment="Right" />
+        </DockPanel>
+        <ListBox Grid.Row="2"
+                 ItemsSource="{Binding Aps}" HorizontalContentAlignment="Stretch">            
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel>
@@ -55,7 +85,7 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <StackPanel Grid.Row="1">
+        <StackPanel Grid.Row="3">
             <TextBlock Text="{Binding Message}"
                        Visibility="{Binding IsWorking, Converter={local:BoolToVis}}"   />
             <Grid Height="20">
