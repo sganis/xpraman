@@ -161,9 +161,9 @@ namespace xpra
             ApList.Add(a); 
         }
 
-        public Ap GetApp(string appname)
+        public Ap GetAppByPath(string apppath)
         {
-            return ApList.Where(x => x.Name == appname).First();
+            return ApList.Where(x => x.Path == apppath).FirstOrDefault();
         }
         #region Run Methods
 
@@ -173,7 +173,7 @@ namespace xpra
             return RunLocal("cmd.exe", "/C " + cmd);
         }
 
-        public ReturnBox RunLocal(string cmd, string args,
+        public ReturnBox RunLocal(string cmd, string args, bool wait=true,
             int timeout_secs = 30)
         {
             Logger.Log($"Running local command: {cmd} {args}");
@@ -190,12 +190,27 @@ namespace xpra
                 Arguments = args
             };
             process.StartInfo = startInfo;
-            process.Start();
-            process.WaitForExit(timeout_secs * 1000);
-            r.Output = process.StandardOutput.ReadToEnd();
-            r.Error = process.StandardError.ReadToEnd();
-            r.ExitCode = process.ExitCode;
-            r.Success = r.ExitCode == 0;
+            try
+            {
+                process.Start();
+                if (wait)
+                {
+                    process.WaitForExit(timeout_secs * 1000);
+                    r.Output = process.StandardOutput.ReadToEnd();
+                    r.Error = process.StandardError.ReadToEnd();
+                    r.ExitCode = process.ExitCode;
+                    r.Success = r.ExitCode == 0;
+                }
+                else
+                {
+                    r.Success = true;
+                }
+            }
+            catch(Exception ex)
+            {
+                r.Success = false;
+                r.Error = ex.Message;
+            }
             return r;
         }
 
@@ -390,7 +405,7 @@ namespace xpra
                 {
                     // openssh keys not supported by ssh.net yet
                     string args = $"-i \"{AppKey}\" -p {port} -oPasswordAuthentication=no -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -oBatchMode=yes -oConnectTimeout={TIMEOUT} { CurrentUser}@{Host} \"echo ok\"";
-                    var r1 = RunLocal("ssh.exe", args, TIMEOUT);
+                    var r1 = RunLocal("ssh.exe", args, true, TIMEOUT);
                     var ok = r1.Output.Trim() == "ok";
                     if (ok)
                     {
@@ -456,7 +471,7 @@ namespace xpra
                     Directory.CreateDirectory(dotssh);
                 if (!File.Exists(AppKey))
                 {
-                    ReturnBox r = RunLocal($@"""{AppPath}\ssh-keygen.exe""", $@"-N """" -f ""{AppKey}""");
+                    ReturnBox r = RunLocal($@"""{AppPath}\ssh-keygen.exe""", $@"-N """" -f ""{AppKey}"" -m PEM");
                 }
                 if (File.Exists(AppPubKey))
                 {

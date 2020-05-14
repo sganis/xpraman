@@ -40,13 +40,15 @@ namespace xpra
         {
             get
             {
-                if (Status == ApStatus.NOT_RUNNING)
-                    return "Blue";
+                //if (Status == ApStatus.NOT_RUNNING)
+                //    return "Purple";
                 if (Status == ApStatus.IDLE)
-                    return "Red";
+                    return "Purple";
                 if (Status == ApStatus.RUNNING)
-                    return "Green";
-                return "ERROR";
+                    return "ForestGreen";
+                if (Status == ApStatus.UNKNOWN)
+                    return "Salmon";
+                return "CadetBlue";
             }
         }
         public Ap()

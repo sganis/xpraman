@@ -66,9 +66,10 @@
                             <Button Content="{Binding RunButtonText}"
                                     Grid.Column="1" Height="50"
                                     Background="{Binding RunButtonColor }"
+                                    BorderBrush="{Binding RunButtonColor }"
                                     Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListBox}},
                                         Path=DataContext.RunApCommand}" 
-                                    CommandParameter="{Binding Name}" >
+                                    CommandParameter="{Binding Path}" >
                                 <!--<Button.Resources>
                                     <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#F44336"/>
                                     <SolidColorBrush x:Key="SecondaryAccentForegroundBrush" Color="#E57373"/>

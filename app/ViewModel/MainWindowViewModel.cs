@@ -147,14 +147,17 @@ namespace xpra
             if (rb != null)
                 Message = rb.Error;           
         }
+        #endregion
 
+        #region Monitor
         private async void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             if (IsCheckingStatus)
                 return;
             if (SelectedConnection == null)
                 return;
-
+            if (!SelectedConnection.Connected)
+                return;
             List<Ap> apsServer = null;
             List<Ap> apsLocal = null;
 
@@ -166,8 +169,38 @@ namespace xpra
                 
             });
 
+            // loop over current connection apps in settings
             foreach (var ap in SelectedConnection.ApList)
-                ap.Status = ApStatus.IDLE;
+            {
+                var ap_server = apsServer.Where(x => x.Path == ap.Path && x.Display == ap.Display).FirstOrDefault();
+                var ap_local = apsLocal.Where(x => x.Display == ap.Display).FirstOrDefault();
+                if (ap_server != null)
+                {
+                    // ap is running in server, check local
+                    if (ap_local != null)
+                    {
+                        // ap is running locally too, status = running
+                        ap.Status = ApStatus.RUNNING;
+                    }
+                    else
+                    {
+                        ap.Status = ApStatus.IDLE;
+                    }
+                }
+                else
+                {
+                    if (ap_local == null)
+                    {
+                        // ap is running locally too, status = running
+                        ap.Status = ApStatus.NOT_RUNNING;
+                    }
+                    else
+                    {
+                        ap.Status = ApStatus.UNKNOWN;
+                    }
+                }
+            }
+
             IsCheckingStatus = false;
 
         }
@@ -256,11 +289,7 @@ namespace xpra
             var status = new Progress<string>(ReportStatus);
             ReturnBox r = await Task.Run(() => MainService.Connect(SelectedConnection, status));
             if (r.ConnectStatus == ConnectStatus.OK)
-            {
                 SelectedConnection = r.Connection;
-                //ConnectionList.Add(SelectedConnection);
-                //NotifyPropertyChanged("ConnectionList");
-            }
             WorkDone(r);
         }
         private async void DisconnectAsync()
@@ -331,10 +360,9 @@ namespace xpra
             WorkStart("Connecting...");
             var status = new Progress<string>(ReportStatus);
             ReturnBox r = await Task.Run(() => MainService.ConnectPassword(SelectedConnection, password, status));
-            //SkipComboChanged = true;
-            //UpdateObservableAps();
-            //SkipComboChanged = false;
-            WorkDone(r);
+            if (r.ConnectStatus == ConnectStatus.OK)
+                SelectedConnection = r.Connection;
+            ConnectAsync();
         }
         
         private void OnSettingsShow(object obj)
@@ -430,15 +458,33 @@ namespace xpra
             //}
         }
 
-        private async void OnRunApp(string appname)
+        private async void OnRunApp(string apppath)
         {
-
-
-            //ConnectionService.Detach(102);
-
-            WorkStart($"Running {appname}...");
+            var r = new ReturnBox();
             var status = new Progress<string>(ReportStatus);
-            ReturnBox r = await Task.Run(() => MainService.RunAp(SelectedConnection, appname, status));
+            var ap = SelectedConnection.GetAppByPath(apppath);
+            if (ap == null) 
+            {
+                r.Error = "App not available";
+                r.Success = false;
+            }
+            else if (ap.Status == ApStatus.RUNNING)
+            {
+                WorkStart($"Pausing {ap.Name}...");
+                await Task.Run(() => MainService.Detach(ap.Display));
+                r.Success = true;
+            }
+            else if (ap.Status == ApStatus.IDLE)
+            {
+                WorkStart($"Resuming {ap.Name}...");
+                r = await Task.Run(() => MainService.Attach(SelectedConnection, ap));
+            }
+            else if (ap.Status == ApStatus.NOT_RUNNING)
+            {
+                WorkStart($"Running {ap.Name}...");                
+                r = await Task.Run(() => MainService.RunAp(SelectedConnection, ap, status));
+            }
+            
             WorkDone(r);
         }
 
@@ -500,6 +546,8 @@ namespace xpra
                         // can execute
                         x =>
                         {
+                            if (CurrentPage == Page.Settings)
+                                return false;
                             return CurrentPage != (Page)x; 
                         }));
             }

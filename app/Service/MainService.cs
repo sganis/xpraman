@@ -102,13 +102,10 @@ namespace xpra
         #region Ap Management
 
 
-        public ReturnBox RunAp(Connection conn, string appname, IProgress<string> status)
+        public ReturnBox RunAp(Connection conn, Ap ap, IProgress<string> status)
         {
             ReturnBox r = new ReturnBox();
-            var ap = SelectedConnection.GetApp(appname);
-            if (ap == null)
-                return r;
-
+            
             // run in server
             if(!conn.Connected)
             {
@@ -116,16 +113,38 @@ namespace xpra
                 r.Error = msg;
                 return r;
             }
-            var cmd = $"/usr/bin/xpra start --exit-with-children --start-child={ap.Path} :{ap.Display}";
+            // todo: get extra args from config
+            var extra_server_args = "";
+            var cmd = $"/usr/bin/xpra start :{ap.Display} --start-child=\"{ap.Path}\" --exit-with-children {extra_server_args} ";
             var rb1 = conn.RunRemote(cmd);
 
             // attach
-            cmd = @"C:\Xpra-Client-Python3-x86_64_4.0-r26306\Xpra_cmd.exe";
-            var args = $"attach ssh://san@166.87.146.140/{ap.Display} --exit-with-children --microphone=off --speaker=off --tray=no --dpi=100 --webcam=off";
-            var rb2 = conn.RunLocal(cmd, args);
-            return r;
+            return Attach(conn, ap);
         }
-
+        public ReturnBox Attach(Connection conn, Ap ap)
+        {
+            var cmd = @"C:\Xpra-Client-Python3-x86_64_4.0-r26306\Xpra.exe";
+            var extra_local_args = "--microphone=off --speaker=off --tray=no --dpi=100 --webcam=off";
+            var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}/{ap.Display} --exit-with-children {extra_local_args}";
+            return conn.RunLocal(cmd, args, false);
+        }
+        public void Detach(int display)
+        {
+            var r = new ReturnBox();
+            string cmd = "";
+            foreach (var p in Process.GetProcesses())
+            {
+                if (p.ProcessName.Contains("Xpra"))
+                {
+                    cmd = ProcCmdLine.GetCommandLineOfProcess(p);
+                    if (Regex.IsMatch(cmd, $@"attach ssh://.+/{display} --exit-with-children"))
+                    {
+                        p.Kill();
+                        break;
+                    }
+                }
+            }
+        }
 
         public void GetProcesses()
         {
@@ -144,17 +163,15 @@ namespace xpra
         public List<Ap> GetApsServer(Connection conn)
         {
             var apps = new List<Ap>();
-            var r = conn.RunRemote("ps aux |grep -v grep|grep \"xpra start\"");
+            var r = conn.RunRemote($"ps aux |grep -v grep|grep {conn.CurrentUser}|grep \"xpra start\"");
             foreach (var line in r.Output.Split('\n'))
             {
-                var m = Regex.Match(line, $@"xpra start :([0-9]+).+--start-child=(.+) ");
+                var m = Regex.Match(line, $@"xpra start :([0-9]+) .*--start-child=(.+) --exit-with-children");
                 if (m.Success)
                 {
-                    int display = int.Parse(m.Groups[1].Value);
-                    string appname = m.Groups[2].Value;
                     var app = new Ap();
-                    app.Display = display;
-                    app.Name = appname;
+                    app.Display = int.Parse(m.Groups[1].Value);
+                    app.Path = m.Groups[2].Value;                    
                     app.Status = ApStatus.IDLE;
                     apps.Add(app);
                 }
@@ -166,10 +183,10 @@ namespace xpra
             var apps = new List<Ap>();
             foreach (var p in Process.GetProcesses())
             {
-                if (p.ProcessName.Contains("Xpra_cmd"))
+                if (p.ProcessName.Contains("Xpra"))
                 {
                     string cmdline = ProcCmdLine.GetCommandLineOfProcess(p);
-                    var m = Regex.Match(cmdline, $@"attach .+ ssh://.+/([0-9]+) ");
+                    var m = Regex.Match(cmdline, $@"attach .*ssh://.+/([0-9]+) --exit-with-children");
                     if (m.Success)
                     {
                         var app = new Ap();
@@ -181,24 +198,7 @@ namespace xpra
             return apps;
         }
 
-        public void Detach(int display)
-        {
-            string cmd = "";
-            foreach (var p in Process.GetProcesses())
-            {
-                if (p.ProcessName.Contains("Xpra_cmd"))
-                {
-                    cmd = ProcCmdLine.GetCommandLineOfProcess(p);
-                    if (Regex.IsMatch(cmd, $@"attach ssh://.+/{display} --exit-with-children"))
-                    {
-                        p.Kill();
-                        break;
-                    }
-                }
-
-
-            }
-        }
+        
         #endregion
 
         
@@ -244,7 +244,10 @@ namespace xpra
             if (r.ConnectStatus != ConnectStatus.OK)
                 return r;
             status?.Report("Generating ssh keys...");
-            return conn.SetupSsh(password);            
+            r = conn.SetupSsh(password);
+            if (r.ConnectStatus != ConnectStatus.OK)
+                return r;
+            return conn.Connect();
         }
         
         public string GetVersions()
