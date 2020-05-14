@@ -33,7 +33,7 @@ namespace xpra
                     return "RESUME";
                 if (Status == ApStatus.RUNNING)
                     return "PAUSE";
-                return "ERROR";
+                return "N/A";
             }
         }
         public string RunButtonColor
@@ -47,7 +47,7 @@ namespace xpra
                 if (Status == ApStatus.RUNNING)
                     return "ForestGreen";
                 if (Status == ApStatus.UNKNOWN)
-                    return "Salmon";
+                    return "DimGray";
                 return "CadetBlue";
             }
         }
