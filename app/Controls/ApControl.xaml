@@ -42,6 +42,11 @@
                 Command="{Binding ConnectDisconnectCommand}"
                 Style="{StaticResource MaterialDesignFlatButton}"
                 HorizontalAlignment="Right" />
+            <Button Content="CLOSE ALL APPS"
+                DockPanel.Dock="Right"
+                Command="{Binding CloseAllAppsCommand}"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                HorizontalAlignment="Right"/>
         </DockPanel>
         <ListBox Grid.Row="2"
                  ItemsSource="{Binding SelectedConnection.ApList}" HorizontalContentAlignment="Stretch">            

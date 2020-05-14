@@ -364,7 +364,16 @@ namespace xpra
                 SelectedConnection = r.Connection;
             ConnectAsync();
         }
-        
+        private async void OnCloseAllApps(object obj)
+        {
+            WorkStart("Closing apps...");
+            var status = new Progress<string>(ReportStatus);
+            await Task.Run(() =>
+            {
+                MainService.CloseAllApps(SelectedConnection, status);
+            });
+            WorkDone();
+        }
         private void OnSettingsShow(object obj)
         {
             //IsDriveNew = false;
@@ -522,6 +531,31 @@ namespace xpra
                     (_connectHostCommand = new RelayCommand(OnConnectHost));
             }
         }
+
+        private ICommand _closeAllAppsCommand;
+        public ICommand CloseAllAppsCommand
+        {
+            get
+            {
+                return _closeAllAppsCommand ??
+                    (_closeAllAppsCommand = new RelayCommand(
+                        x =>
+                        {
+                            OnCloseAllApps(x);
+                        },
+                        // can execute
+                        x =>
+                        {
+                            //if(SelectedConnection != null)
+                            //{
+                            //    var ap = SelectedConnection.ApList.Where(y => y.Status != ApStatus.NOT_RUNNING).FirstOrDefault();
+                            //    return ap != null;
+                            //}
+                            return true;
+                        }));
+            }
+        }
+
         private ICommand _showPageCommand;
         public ICommand ShowPageCommand
         {
@@ -546,8 +580,6 @@ namespace xpra
                         // can execute
                         x =>
                         {
-                            if (CurrentPage == Page.Settings)
-                                return false;
                             return CurrentPage != (Page)x; 
                         }));
             }

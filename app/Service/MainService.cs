@@ -236,7 +236,14 @@ namespace xpra
             }
             return conn.Disconnect();
         }
-
+        public void CloseAllApps(Connection conn, IProgress<string> status)
+        {
+            foreach(var ap in conn.ApList)
+            {
+                status.Report($"Closing {ap.Name}...");
+                conn.RunRemote($"xpra stop {ap.Display}");
+            }
+        }
         public ReturnBox ConnectPassword(Connection conn, string password, IProgress<string> status)
         {
             status?.Report("Connecting...");

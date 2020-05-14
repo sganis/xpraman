@@ -46,13 +46,14 @@
                     <StackPanel>
                         <Button
                             Content="Settings"
+                            IsEnabled="False"
                             Command="{Binding ShowPageCommand}"
                             CommandParameter="{x:Static local:Page.Settings}" />
                         <Button
                             Content="Open Terminal"
                             Command="{Binding RunTerminalCommand}" />
                         <Button
-                            Content="Open Logs Folder"
+                            Content="Open Config/Logs Location"
                             Command="{Binding OpenLogsFolderCommand}" />
                         <Button
                             Content="About"
