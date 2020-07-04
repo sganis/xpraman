@@ -13,11 +13,14 @@ namespace xpra
     {
         #region Properties
 
+        static string XPRA = "Xpra-Client-Python3-x86_64_4.0.2-r26625";
+
+        static string XPRA_LOCAL = $@"C:\{XPRA}\Xpra.exe";        
         const string HostRegex = @"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$";
 
         public event EventHandler<FocusRequestedEventArgs> FocusRequested;
 
-        private MainService MainService { get; } = new MainService();
+        private MainService MainService { get; } = new MainService(XPRA_LOCAL);
         public bool IsCheckingStatus { get; set; }
         public bool Loaded { get; set; }
         public bool SkipComboChanged { get; set; }
@@ -132,7 +135,7 @@ namespace xpra
             var name = "PATH";
             var scope = EnvironmentVariableTarget.User; // or User
             var oldValue = Environment.GetEnvironmentVariable(name, scope);
-            var newValue = @"C:\Xpra-Client-Python3-x86_64_4.0-r26306;" + oldValue;
+            var newValue = $@"C:\{XPRA};" + oldValue;
             Environment.SetEnvironmentVariable(name, newValue, scope);
 
             // Monitor
@@ -486,7 +489,7 @@ namespace xpra
             else if (ap.Status == ApStatus.IDLE)
             {
                 WorkStart($"Resuming {ap.Name}...");
-                r = await Task.Run(() => MainService.Attach(SelectedConnection, ap));
+                r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, ap));
             }
             else if (ap.Status == ApStatus.NOT_RUNNING)
             {

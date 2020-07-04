@@ -23,11 +23,19 @@ namespace xpra
     {
         #region Properties
 
-        
+        string m_xpra_local;
+
+
         public ObservableCollection<Connection> ConnectionList { get; set; } = new ObservableCollection<Connection>();
         public Connection SelectedConnection { get; set; } = new Connection();
         
-
+        public string ExePath
+        {
+            get
+            {
+                return System.AppDomain.CurrentDomain.BaseDirectory;
+            }
+        }
         
         private string localAppData;
         public string LocalAppData
@@ -42,9 +50,9 @@ namespace xpra
 
         #endregion
 
-        public MainService()
+        public MainService( string xpra_local)
         {
-
+            m_xpra_local = xpra_local;
         }
 
         #region Serialization
@@ -65,7 +73,7 @@ namespace xpra
         public Settings LoadSettings()
         {
             Settings settings = new Settings() {
-                Filename = LocalAppData + "\\config.json" 
+                Filename = ExePath + "config.json" 
             };
             settings.Load();
             return settings;
@@ -75,7 +83,7 @@ namespace xpra
         {
             try
             {
-                settings.Filename = LocalAppData + "\\config.json";
+                settings.Filename = ExePath + "config.json";
                 
                 using (var file = File.CreateText(settings.Filename))
                 {
@@ -113,18 +121,38 @@ namespace xpra
                 r.Error = msg;
                 return r;
             }
-            // todo: get extra args from config
-            var extra_server_args = "";
-            var cmd = $"/usr/bin/xpra start :{ap.Display} --start-child=\"{ap.Path}\" --exit-with-children {extra_server_args} ";
-            var rb1 = conn.RunRemote(cmd);
+            status.Report("Starting xpra server...");
+            r = XpraStart(conn, ap);
+            if (!r.Success)
+                return r;
+
+            status.Report($"Starting {ap.Name}...");
+            var cmd = $"export DISPLAY=:{ap.Display}; \"{ap.Path}\"";
+            r = conn.RunRemote(cmd);
+            if (!r.Success)
+                return r;
 
             // attach
-            return Attach(conn, ap);
+            status.Report("Attaching display...");
+            return XpraAttach(conn, ap);
         }
-        public ReturnBox Attach(Connection conn, Ap ap)
+        public ReturnBox XpraStart(Connection conn, Ap ap)
         {
-            var cmd = @"C:\Xpra-Client-Python3-x86_64_4.0-r26306\Xpra.exe";
-            var extra_local_args = "--microphone=off --speaker=off --tray=no --dpi=100 --webcam=off";
+            ReturnBox r = new ReturnBox();
+            // check if xpra is running in display
+
+
+            // todo: get extra args from config
+            var extra_server_args = "";
+            var cmd = $"xpra start :{ap.Display} --start-child=\"{ap.Path}\" --exit-with-children {extra_server_args} ";
+            r = conn.RunRemote(cmd);
+
+            return r;
+        }
+        public ReturnBox XpraAttach(Connection conn, Ap ap)
+        {
+            var cmd = m_xpra_local;
+            var extra_local_args = "--microphone=off --speaker=off --tray=no --dpi=100 --webcam=no --idle-timeout=0 --cursors=yes --opengl=yes --compress=0";
             var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}/{ap.Display} --exit-with-children {extra_local_args}";
             return conn.RunLocal(cmd, args, false);
         }

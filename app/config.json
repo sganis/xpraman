@@ -5,6 +5,10 @@
   		"nickname": "",
   		"apps" : [
   			{
+  				"name" : "Terminal",
+  				"path" : "xterm",
+  			},
+  			{
   				"name" : "Text Editor",
   				"path" : "gedit",
   			},
