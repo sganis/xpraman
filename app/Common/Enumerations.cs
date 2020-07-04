@@ -8,11 +8,17 @@
         Settings,
         About,
     }
+    public enum DisplayStatus
+    {
+        NOT_USED,
+        IDLE,
+        ACTIVE,
+    }
     public enum ApStatus
     {
         NOT_RUNNING,
-        IDLE,
-        RUNNING,
+        BACKGROUND,
+        ACTIVE,
         UNKNOWN,
     }
     public enum ConnectStatus

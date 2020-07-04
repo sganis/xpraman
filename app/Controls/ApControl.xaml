@@ -9,6 +9,21 @@
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="300">
+
+    <UserControl.Resources>
+        <CollectionViewSource x:Key="cvs" 
+                              Source="{Binding SelectedConnection.ApList}" 
+                              IsLiveGroupingRequested="True"
+                              >
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="Display" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
+        <local:DisplayToStatusConverter x:Key="displayToStatusConverter" />
+        <local:DisplayToActionTextConverter x:Key="displayToActionTextConverter" />
+    </UserControl.Resources>
+
+
     <Grid IsEnabled="{Binding IsWorking, Converter={local:NegateBoolConverter}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -26,7 +41,7 @@
                 SelectionChanged="ComboBox_SelectionChanged"
                 FontSize="24">
         </ComboBox>
-        <DockPanel Grid.Row="1">
+        <DockPanel Grid.Row="1" Margin="0 10 0 10">
             <TextBlock DockPanel.Dock="Left"
                     Text="{Binding SelectedConnection.UrlDisplay}"
                     Margin="0,10" />
@@ -48,47 +63,71 @@
                 Style="{StaticResource MaterialDesignFlatButton}"
                 HorizontalAlignment="Right"/>
         </DockPanel>
-        <ListBox Grid.Row="2"
-                 ItemsSource="{Binding SelectedConnection.ApList}" HorizontalContentAlignment="Stretch">            
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel>
-                    <Grid d:DesignWidth="384.268" d:DesignHeight="100.705">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="100"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Height="Auto" >
-                            <StackPanel.Resources>
-                                <Style TargetType="{x:Type TextBlock}">
-                                    <Setter Property="Margin" Value="0,10,0,0"/>
-                                </Style>
-                            </StackPanel.Resources>
-                            <TextBlock Text="{Binding Name}" FontSize="30"/>
-                            <TextBlock Text="{Binding Path}"/>
-                            <TextBlock Text="{Binding Status}"/>
-                        </StackPanel>
-                            <Button Content="{Binding RunButtonText}"
-                                    Grid.Column="1" Height="50"
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="2" Padding="0,0,20,0">
+            <ItemsControl Name="appsListBox" 
+                 ItemsSource="{Binding Source={StaticResource cvs}}"                 
+                 HorizontalContentAlignment="Stretch">
+                <ItemsControl.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <Border Padding="10" BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Path=Name}"
+                                           Padding="10"
+                                           FontWeight="Bold" 
+                                           />
+                                        <TextBlock Text="{Binding Path=Items, Converter={StaticResource displayToStatusConverter}}"  
+                                                   Grid.Column="1"
+                                                   Padding="10" />
+                                        <Button Content="{Binding Path=Items, Converter={StaticResource displayToActionTextConverter}}"
+                                                Grid.Column="2"
+                                                Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}},
+                                                    Path=DataContext.AttachCommand}" 
+                                                CommandParameter="{Binding Path=Name}" >
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </ItemsControl.GroupStyle>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0 0 0 20">
+                            <TextBlock Text="{Binding Name}" FontSize="30" Margin="10 10 0 0"/>
+                            <Border Height="2" Margin="20,5,0,0" BorderThickness="0 0 0 1"
+                                BorderBrush="{DynamicResource MaterialDesignDivider}"/>
+                            <Grid d:DesignWidth="384.268" d:DesignHeight="100.705"
+                                  Margin="20 0 20 0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Height="Auto">
+                                    <TextBlock Text="{Binding Path}" Margin="20 10 0 0"/>
+                                    <TextBlock Text="{Binding Status}" Margin="20 10 0 0"/>
+                                </StackPanel>
+                                <Button Content="{Binding RunButtonText}"
+                                    Grid.Column="1" Height="30"
                                     Background="{Binding RunButtonColor }"
                                     BorderBrush="{Binding RunButtonColor }"
+                                        
                                     Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListBox}},
                                         Path=DataContext.RunApCommand}" 
                                     CommandParameter="{Binding Path}" >
-                                <!--<Button.Resources>
-                                    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#F44336"/>
-                                    <SolidColorBrush x:Key="SecondaryAccentForegroundBrush" Color="#E57373"/>
-                                </Button.Resources>-->
-
-                            </Button>
-                        </Grid>
-                        <Border Height="2" Margin="0,5,0,0" BorderThickness="0 0 0 1"
-                                BorderBrush="{DynamicResource MaterialDesignDivider}"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
         <StackPanel Grid.Row="3">
             <TextBlock Text="{Binding Message}"
                        Visibility="{Binding IsWorking, Converter={local:BoolToVis}}"   />

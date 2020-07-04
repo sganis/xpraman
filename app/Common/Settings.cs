@@ -42,7 +42,6 @@ namespace xpra
                     if (!conn.ContainsKey("apps"))
                         return;
                     var aps = JsonConvert.DeserializeObject<List<object>>(conn["apps"].ToString());
-                    int i = 0;
                     foreach (var a in aps)
                     {
                         var ap = JsonConvert.DeserializeObject<Dictionary<string, string>>(a.ToString());
@@ -50,7 +49,7 @@ namespace xpra
                         {
                             Name = ap["name"],
                             Path = ap["path"],
-                            Display = 100 + (++i)
+                            Display = int.Parse("0"+ ap["display"]),
                         };
                         connobj.AddApp(appobj);
                         

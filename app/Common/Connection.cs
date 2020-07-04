@@ -165,6 +165,11 @@ namespace xpra
         {
             return ApList.Where(x => x.Path == apppath).FirstOrDefault();
         }
+        public Ap GetAppByDisplay(int display)
+        {
+            return ApList.Where(x => x.Display == display).FirstOrDefault();
+        }
+
         #region Run Methods
 
         public ReturnBox RunLocal(string cmd)
@@ -223,8 +228,8 @@ namespace xpra
                 {
                     SshCommand command = Ssh.CreateCommand(cmd);
                     command.CommandTimeout = TimeSpan.FromSeconds(timeout_secs);
-                    r.Output = command.Execute();
-                    r.Error = command.Error;
+                    r.Output = command.Execute().Trim();
+                    r.Error = command.Error.Trim();
                     r.ExitCode = command.ExitStatus;
                 }
                 catch (Exception ex)

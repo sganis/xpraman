@@ -10,6 +10,24 @@ namespace xpra
     {
         public string Path { get; set; }
         public string Name { get; set; }
+        private DisplayStatus _displayStatus;
+        public DisplayStatus DisplayStatus { 
+            get { return _displayStatus;  }
+            set
+            {
+                if (_displayStatus != value)
+                {
+                    _displayStatus = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged("AttachButtonText");
+                    NotifyPropertyChanged("RunButtonText");
+                    NotifyPropertyChanged("RunButtonColor");
+                    NotifyPropertyChanged("ApList");
+
+                }
+            }
+        }
+
         private ApStatus _status;
         public ApStatus Status { get { return _status; }
             set 
@@ -18,20 +36,34 @@ namespace xpra
                 {
                     _status = value;
                     NotifyPropertyChanged();
+                    NotifyPropertyChanged("AttachButtonText");
                     NotifyPropertyChanged("RunButtonText");
                     NotifyPropertyChanged("RunButtonColor");
                 }
             }
         }
         public int Display { get; set; }
+        public string AttachButtonText
+        {
+            get
+            {
+                if (Status == ApStatus.NOT_RUNNING)
+                    return "RUN";
+                if (Status == ApStatus.BACKGROUND)
+                    return "RESUME";
+                if (Status == ApStatus.ACTIVE)
+                    return "PAUSE";
+                return "N/A";
+            }
+        }
         public string RunButtonText { 
             get 
             {
                 if (Status == ApStatus.NOT_RUNNING)
                     return "RUN";
-                if (Status == ApStatus.IDLE)
+                if (Status == ApStatus.BACKGROUND)
                     return "RESUME";
-                if (Status == ApStatus.RUNNING)
+                if (Status == ApStatus.ACTIVE)
                     return "PAUSE";
                 return "N/A";
             }
@@ -42,9 +74,9 @@ namespace xpra
             {
                 //if (Status == ApStatus.NOT_RUNNING)
                 //    return "Purple";
-                if (Status == ApStatus.IDLE)
+                if (Status == ApStatus.BACKGROUND)
                     return "Purple";
-                if (Status == ApStatus.RUNNING)
+                if (Status == ApStatus.ACTIVE)
                     return "ForestGreen";
                 if (Status == ApStatus.UNKNOWN)
                     return "DimGray";
@@ -53,7 +85,7 @@ namespace xpra
         }
         public Ap()
         {
-
+            DisplayStatus = DisplayStatus.NOT_USED;
         }
         public Ap(Ap d)
         {

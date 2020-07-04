@@ -15,6 +15,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.ServiceProcess;
 using System.Text.RegularExpressions;
+using System.Windows.Controls;
 
 namespace xpra
 {
@@ -190,40 +191,44 @@ namespace xpra
         }
         public List<Ap> GetApsServer(Connection conn)
         {
+            // get server xpra sessions
+            var r = conn.RunRemote($"xpra list |grep -o \"LIVE session at :[0-9]\\+\" | awk '{{print $4}}'");
             var apps = new List<Ap>();
-            var r = conn.RunRemote($"ps aux |grep -v grep|grep {conn.CurrentUser}|grep \"xpra start\"");
+
             foreach (var line in r.Output.Split('\n'))
             {
-                var m = Regex.Match(line, $@"xpra start :([0-9]+) .*--start-child=(.+) --exit-with-children");
-                if (m.Success)
+                var disp_str = line.Trim();
+                if (String.IsNullOrEmpty(disp_str) || !disp_str.Contains(":"))
+                    continue;
+                int disp_int = int.Parse(disp_str.Split(':')[1]);
+                r = conn.RunRemote($"ps uxe |grep \"DISPLAY={disp_str}\" |grep -v grep |awk '{{print $11}}'");
+                foreach (var path in r.Output.Split('\n'))
                 {
                     var app = new Ap();
-                    app.Display = int.Parse(m.Groups[1].Value);
-                    app.Path = m.Groups[2].Value;                    
-                    app.Status = ApStatus.IDLE;
+                    app.Display = disp_int;
+                    app.Path = path;
+                    app.Status = ApStatus.BACKGROUND;
                     apps.Add(app);
                 }
             }
             return apps;
         }
-        public List<Ap> GetApsLocal(Connection conn)
+        public List<int> GetDisplaysLocal(Connection conn)
         {
-            var apps = new List<Ap>();
+            var displays = new List<int>();
             foreach (var p in Process.GetProcesses())
             {
                 if (p.ProcessName.Contains("Xpra"))
                 {
                     string cmdline = ProcCmdLine.GetCommandLineOfProcess(p);
-                    var m = Regex.Match(cmdline, $@"attach .*ssh://.+/([0-9]+) --exit-with-children");
+                    var m = Regex.Match(cmdline, $@"attach .*ssh://.+/([0-9]+)");
                     if (m.Success)
                     {
-                        var app = new Ap();
-                        app.Display = int.Parse(m.Groups[1].Value);
-                        apps.Add(app);
+                        displays.Add(int.Parse(m.Groups[1].Value));
                     }
                 }
             }
-            return apps;
+            return displays;
         }
 
         
@@ -266,11 +271,11 @@ namespace xpra
         }
         public void CloseAllApps(Connection conn, IProgress<string> status)
         {
-            foreach(var ap in conn.ApList)
-            {
-                status.Report($"Closing {ap.Name}...");
-                conn.RunRemote($"xpra stop {ap.Display}");
-            }
+            //foreach(var ap in conn.ApList)
+            //{
+            //    status.Report($"Closing {ap.Name}...");
+            //    conn.RunRemote($"xpra stop {ap.Display}");
+            //}
         }
         public ReturnBox ConnectPassword(Connection conn, string password, IProgress<string> status)
         {

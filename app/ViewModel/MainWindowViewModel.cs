@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Windows.Data;
+using System.ComponentModel;
 
 namespace xpra
 {
@@ -19,7 +20,7 @@ namespace xpra
         const string HostRegex = @"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$";
 
         public event EventHandler<FocusRequestedEventArgs> FocusRequested;
-
+        
         private MainService MainService { get; } = new MainService(XPRA_LOCAL);
         public bool IsCheckingStatus { get; set; }
         public bool Loaded { get; set; }
@@ -147,6 +148,8 @@ namespace xpra
             CurrentPage = Page.Main;
             LoadSettingsAsync();
             GetVersionsAsync();
+
+            
             if (rb != null)
                 Message = rb.Error;           
         }
@@ -162,13 +165,13 @@ namespace xpra
             if (!SelectedConnection.Connected)
                 return;
             List<Ap> apsServer = null;
-            List<Ap> apsLocal = null;
+            List<int> displaysLocal = null;
 
             IsCheckingStatus = true;
             await Task.Run(() =>
             {
                 apsServer = MainService.GetApsServer(SelectedConnection);
-                apsLocal = MainService.GetApsLocal(SelectedConnection);
+                displaysLocal = MainService.GetDisplaysLocal(SelectedConnection);
                 
             });
 
@@ -176,34 +179,38 @@ namespace xpra
             foreach (var ap in SelectedConnection.ApList)
             {
                 var ap_server = apsServer.Where(x => x.Path == ap.Path && x.Display == ap.Display).FirstOrDefault();
-                var ap_local = apsLocal.Where(x => x.Display == ap.Display).FirstOrDefault();
+                var disp_local = displaysLocal.Where(x => x == ap.Display).FirstOrDefault();
                 if (ap_server != null)
                 {
                     // ap is running in server, check local
-                    if (ap_local != null)
+                    if (disp_local > 0)
                     {
-                        // ap is running locally too, status = running
-                        ap.Status = ApStatus.RUNNING;
+                        // display is attached, status = running
+                        ap.Status = ApStatus.ACTIVE;
+                        ap.DisplayStatus = DisplayStatus.ACTIVE; // attached
                     }
                     else
                     {
-                        ap.Status = ApStatus.IDLE;
+                        ap.Status = ApStatus.BACKGROUND;
+                        ap.DisplayStatus = DisplayStatus.IDLE; // detached
                     }
                 }
                 else
                 {
-                    if (ap_local == null)
+                    if (disp_local == 0)
                     {
-                        // ap is running locally too, status = running
+                        // display is not used
                         ap.Status = ApStatus.NOT_RUNNING;
+                        ap.DisplayStatus = DisplayStatus.NOT_USED;
                     }
                     else
                     {
                         ap.Status = ApStatus.UNKNOWN;
+                        ap.DisplayStatus = DisplayStatus.NOT_USED;
                     }
                 }
             }
-
+            
             IsCheckingStatus = false;
 
         }
@@ -480,13 +487,13 @@ namespace xpra
                 r.Error = "App not available";
                 r.Success = false;
             }
-            else if (ap.Status == ApStatus.RUNNING)
+            else if (ap.Status == ApStatus.ACTIVE)
             {
                 WorkStart($"Pausing {ap.Name}...");
                 await Task.Run(() => MainService.Detach(ap.Display));
                 r.Success = true;
             }
-            else if (ap.Status == ApStatus.IDLE)
+            else if (ap.Status == ApStatus.BACKGROUND)
             {
                 WorkStart($"Resuming {ap.Name}...");
                 r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, ap));
@@ -500,6 +507,30 @@ namespace xpra
             WorkDone(r);
         }
 
+        private async void OnAttach(int display)
+        {
+            var r = new ReturnBox();
+            var status = new Progress<string>(ReportStatus);
+            var ap = SelectedConnection.GetAppByDisplay(display);
+            if (ap == null)
+            {
+                r.Error = "Display not available";
+                r.Success = false;
+            }
+            else if (ap.DisplayStatus == DisplayStatus.ACTIVE)
+            {
+                WorkStart($"Detaching DISPLAY :{ap.Display}...");
+                await Task.Run(() => MainService.Detach(ap.Display));
+                r.Success = true;
+            }
+            else
+            {
+                WorkStart($"Attaching DISPLAY :{ap.Display}...");
+                r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, ap));
+            }
+            
+            WorkDone(r);
+        }
 
         #endregion
 
@@ -733,7 +764,25 @@ namespace xpra
                        }));
             }
         }
-
+        private ICommand _attachCommand;
+        public ICommand AttachCommand
+        {
+            get
+            {
+                return _attachCommand ??
+                   (_attachCommand = new RelayCommand(
+                       x =>
+                       {
+                           var display = int.Parse(x.ToString());
+                           OnAttach(display);
+                       },
+                       // can execute
+                       x =>
+                       {
+                           return true;
+                       }));
+            }
+        }
         #endregion
 
         #region events

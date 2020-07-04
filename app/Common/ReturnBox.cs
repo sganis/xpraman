@@ -8,6 +8,8 @@
             ApStatus = ApStatus.UNKNOWN;
             Success = false;
             ExitCode = -999;
+            Output = "";
+            Error = "";
         }
         public string Error { get; set; }
         public string Output { get; set; }
