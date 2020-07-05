@@ -11,7 +11,8 @@
     d:DesignWidth="300">
 
     <UserControl.Resources>
-        <CollectionViewSource x:Key="cvs" 
+        
+        <!--<CollectionViewSource x:Key="cvs" 
                               Source="{Binding SelectedConnection.ApList}" 
                               IsLiveGroupingRequested="True"
                               >
@@ -20,7 +21,7 @@
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
         <local:DisplayToStatusConverter x:Key="displayToStatusConverter" />
-        <local:DisplayToActionTextConverter x:Key="displayToActionTextConverter" />
+        <local:DisplayToActionTextConverter x:Key="displayToActionTextConverter" />-->
     </UserControl.Resources>
 
 
@@ -32,7 +33,6 @@
             <RowDefinition Height="Auto" />
  
         </Grid.RowDefinitions>
-
         <ComboBox
                 ItemsSource="{Binding ConnectionList}" 
                 SelectedItem="{Binding SelectedConnection}"
@@ -63,7 +63,80 @@
                 Style="{StaticResource MaterialDesignFlatButton}"
                 HorizontalAlignment="Right"/>
         </DockPanel>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="2" Padding="0,0,20,0">
+
+        <local:StretchingTreeView Grid.Row="2" 
+                                  Padding="0 0 20 0"
+                                  x:Name="MainTreeView" HorizontalAlignment="Stretch" 
+                                  Margin="10" VerticalAlignment="Stretch" 
+                                  HorizontalContentAlignment="Stretch"
+                                  BorderBrush="Transparent"
+                                  Background="{DynamicResource MaterialDesignPaper}"
+                                  ItemsSource="{Binding SelectedConnection.DisplayList}">
+
+            <local:StretchingTreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type local:Display}"
+                                          ItemsSource="{Binding ApList}">
+                    <Border  BorderBrush="Gray" BorderThickness="1">
+                        <Grid Margin="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Id}" Margin="10" />
+                                <TextBlock Text="{Binding Status}" Margin="10"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" 
+                                    Content="{Binding AttachButtonText}"
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
+                                        Path=DataContext.AttachCommand}" 
+                                    CommandParameter="{Binding Id}"
+                                    Width="100" Height="30">
+                            </Button>
+                        </Grid>
+                    </Border>
+                </HierarchicalDataTemplate>
+                <DataTemplate DataType="{x:Type local:Ap}">
+                    <StackPanel Margin="0 0 0 20">
+                        <Grid Margin="20 0 20 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Name}" FontSize="30" Margin="10 10 0 0"/>
+                            <TextBlock Text="{Binding Status}"  Grid.Column="1" Margin="10 20 20 0"/>
+                            <Button Content="{Binding RunButtonText}"
+                                    Grid.Column="2" 
+                                    Width="100"
+                                    Height="30"
+                                    Background="{Binding RunButtonColor }"
+                                    BorderBrush="{Binding RunButtonColor }"
+                                    Margin="0 10 0 0"    
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
+                                        Path=DataContext.RunApCommand}" 
+                                    CommandParameter="{Binding}" >
+                            </Button>
+                        </Grid>
+                        <Border Height="2" Margin="20,5,0,0" BorderThickness="0 0 0 1"
+                                BorderBrush="{DynamicResource MaterialDesignDivider}"/>
+                        <TextBlock Text="{Binding Path}" Margin="40 10 0 0"/>
+                    </StackPanel>
+                    
+                </DataTemplate>
+            </local:StretchingTreeView.Resources>
+            <local:StretchingTreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="True" />
+                    <Setter Property="Margin" Value="5 20 5 5" />
+                </Style>
+            </local:StretchingTreeView.ItemContainerStyle>
+
+
+        </local:StretchingTreeView>
+
+        <!--<ScrollViewer Visibility="Collapsed" VerticalScrollBarVisibility="Auto"
+                      Grid.Row="2" Padding="0,0,20,0">
             <ItemsControl Name="appsListBox" 
                  ItemsSource="{Binding Source={StaticResource cvs}}"                 
                  HorizontalContentAlignment="Stretch">
@@ -127,7 +200,7 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </ScrollViewer>
+        </ScrollViewer>-->
         <StackPanel Grid.Row="3">
             <TextBlock Text="{Binding Message}"
                        Visibility="{Binding IsWorking, Converter={local:BoolToVis}}"   />

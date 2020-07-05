@@ -1,53 +1,40 @@
 ﻿{
-  "connections": [
-  	{
-  		"url" : "ssh://sant@192.168.100.201:22",
-  		"nickname": "Box",
-        "apps" : [
-  			{
-  				"name" : "Terminal",
-  				"path" : "xterm",
-  		        "display" : 100,     
-			},
-  			{
-  				"name" : "Text Editor",
-  				"path" : "gedit",
-  		        "display" : 100,     
-  			},
-  			{
-  				"name" : "Browser",
-  				"path" : "firefox",
-  		        "display" : 101,     
-  			},
-  			{
-  				"name" : "Browser",
-  				"path" : "firefox",
-  		        "display" : 102,     
-  			},
-  			{
-  				"name" : "Browser",
-  				"path" : "firefox",
-  		        "display" : 103,     
-  			},
-  			{
-  				"name" : "Browser",
-  				"path" : "firefox",
-  		        "display" : 104,     
-  			},
-  		],
-  	},
-    {
-  		"url" : "ssh://sant@192.168.100.41:22",
-  		"nickname": "Box",
-        "apps" : [
-  			{
-  				"name" : "Terminal",
-  				"path" : "xterm",
-  		        "display" : 100,     
-			},
-  			
-  		],
-  	},
-
-  ],
+    "apps" : [
+  		{
+  			"name" : "Terminal",
+  			"path" : "/usr/bin/xterm",
+            "host" : "192.168.100.201",
+  		    "display" : 100,     
+		},
+  		{
+  			"name" : "Text Editor",
+  			"path" : "/usr/bin/gedit",
+  		    "host" : "192.168.100.201",
+  		    "display" : 100,     
+  		},
+  		{
+  			"name" : "Browser",
+  			"path" : "/usr/bin/firefox",
+  		    "host" : "192.168.100.201",
+  		    "display" : 101,     
+  		},
+  		{
+  			"name" : "Browser",
+  			"path" : "/usr/bin/firefox",
+  		    "host" : "192.168.100.201",
+  		    "display" : 102,     
+  		},
+  		{
+  			"name" : "Browser",
+  			"path" : "/usr/bin/firefox",
+  		    "host" : "192.168.100.201",
+  		    "display" : 103,     
+  		},
+  		{
+  			"name" : "Browser",
+  			"path" : "/usr/bin/firefox",
+  		    "host" : "192.168.100.41",
+  		    "display" : 104,     
+  		},
+  	],
 }

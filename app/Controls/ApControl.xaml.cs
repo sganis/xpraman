@@ -15,7 +15,7 @@ namespace xpra
         {
             var vm = (MainWindowViewModel)DataContext;
             vm.OnComboChanged();
- 
+            
         }
     }
 }

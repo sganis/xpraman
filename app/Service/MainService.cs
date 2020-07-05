@@ -122,42 +122,38 @@ namespace xpra
                 r.Error = msg;
                 return r;
             }
-            status.Report("Starting xpra server...");
-            r = XpraStart(conn, ap);
-            if (!r.Success)
-                return r;
 
             status.Report($"Starting {ap.Name}...");
-            var cmd = $"export DISPLAY=:{ap.Display}; \"{ap.Path}\"";
-            r = conn.RunRemote(cmd);
-            if (!r.Success)
-                return r;
-
-            // attach
-            status.Report("Attaching display...");
-            return XpraAttach(conn, ap);
+            var cmd = $"export DISPLAY=:{ap.DisplayId}; \"{ap.Path}\" >/dev/null 2>&1 &";
+            return conn.RunRemote(cmd);
+            
         }
-        public ReturnBox XpraStart(Connection conn, Ap ap)
+        public ReturnBox CloseAp(Connection conn, Ap ap, IProgress<string> status)
+        {
+            return conn.RunRemote($"kill -9 {ap.Pid}");
+        }
+            //status.Rep
+        public ReturnBox XpraStart(Connection conn, Display display)
         {
             ReturnBox r = new ReturnBox();
-            // check if xpra is running in display
+            // todo: check if xpra is running in display
 
 
             // todo: get extra args from config
             var extra_server_args = "";
-            var cmd = $"xpra start :{ap.Display} --start-child=\"{ap.Path}\" --exit-with-children {extra_server_args} ";
+            var cmd = $"xpra start :{display.Id} {extra_server_args} ";
             r = conn.RunRemote(cmd);
 
             return r;
         }
-        public ReturnBox XpraAttach(Connection conn, Ap ap)
+        public ReturnBox XpraAttach(Connection conn, Display display)
         {
             var cmd = m_xpra_local;
             var extra_local_args = "--microphone=off --speaker=off --tray=no --dpi=100 --webcam=no --idle-timeout=0 --cursors=yes --opengl=yes --compress=0";
-            var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}/{ap.Display} --exit-with-children {extra_local_args}";
+            var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}:{conn.CurrentPort}/{display.Id} --exit-with-children {extra_local_args}";
             return conn.RunLocal(cmd, args, false);
         }
-        public void Detach(int display)
+        public void Detach(Display display)
         {
             var r = new ReturnBox();
             string cmd = "";
@@ -166,7 +162,7 @@ namespace xpra
                 if (p.ProcessName.Contains("Xpra"))
                 {
                     cmd = ProcCmdLine.GetCommandLineOfProcess(p);
-                    if (Regex.IsMatch(cmd, $@"attach ssh://.+/{display} --exit-with-children"))
+                    if (Regex.IsMatch(cmd, $@"attach ssh://.+/{display.Id} --exit-with-children"))
                     {
                         p.Kill();
                         break;
@@ -201,19 +197,26 @@ namespace xpra
                 if (String.IsNullOrEmpty(disp_str) || !disp_str.Contains(":"))
                     continue;
                 int disp_int = int.Parse(disp_str.Split(':')[1]);
-                r = conn.RunRemote($"ps uxe |grep \"DISPLAY={disp_str}\" |grep -v grep |awk '{{print $11}}'");
-                foreach (var path in r.Output.Split('\n'))
+                
+                // get pid,command
+                r = conn.RunRemote($"ps uxe |grep \"DISPLAY={disp_str}\" |grep -v grep |awk '{{print $2\",\"$11}}'");
+                
+                foreach (var pid_path in r.Output.Split('\n'))
                 {
                     var app = new Ap();
-                    app.Display = disp_int;
-                    app.Path = path;
+                    var aux = pid_path.Split(',');
+                    if (aux.Length != 2)
+                        continue;
+                    app.Pid = int.Parse(aux[0]);
+                    app.DisplayId = disp_int;
+                    app.Path = aux[1];
                     app.Status = ApStatus.BACKGROUND;
                     apps.Add(app);
                 }
             }
             return apps;
         }
-        public List<int> GetDisplaysLocal(Connection conn)
+        public List<int> GetDisplaysLocal()
         {
             var displays = new List<int>();
             foreach (var p in Process.GetProcesses())

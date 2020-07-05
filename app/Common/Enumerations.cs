@@ -18,7 +18,7 @@
     {
         NOT_RUNNING,
         BACKGROUND,
-        ACTIVE,
+        RUNNING,
         UNKNOWN,
     }
     public enum ConnectStatus

@@ -8,8 +8,10 @@ namespace xpra
     [JsonObject(MemberSerialization.OptIn)]
     public class Ap : Observable
     {
+        public int Pid { get; set; }
         public string Path { get; set; }
         public string Name { get; set; }
+        public string Host { get; set; }
         private DisplayStatus _displayStatus;
         public DisplayStatus DisplayStatus { 
             get { return _displayStatus;  }
@@ -42,30 +44,14 @@ namespace xpra
                 }
             }
         }
-        public int Display { get; set; }
-        public string AttachButtonText
-        {
-            get
-            {
-                if (Status == ApStatus.NOT_RUNNING)
-                    return "RUN";
-                if (Status == ApStatus.BACKGROUND)
-                    return "RESUME";
-                if (Status == ApStatus.ACTIVE)
-                    return "PAUSE";
-                return "N/A";
-            }
-        }
+        public int DisplayId { get; set; }
+        
         public string RunButtonText { 
             get 
             {
                 if (Status == ApStatus.NOT_RUNNING)
                     return "RUN";
-                if (Status == ApStatus.BACKGROUND)
-                    return "RESUME";
-                if (Status == ApStatus.ACTIVE)
-                    return "PAUSE";
-                return "N/A";
+                return "CLOSE";
             }
         }
         public string RunButtonColor
@@ -76,7 +62,7 @@ namespace xpra
                 //    return "Purple";
                 if (Status == ApStatus.BACKGROUND)
                     return "Purple";
-                if (Status == ApStatus.ACTIVE)
+                if (Status == ApStatus.RUNNING)
                     return "ForestGreen";
                 if (Status == ApStatus.UNKNOWN)
                     return "DimGray";

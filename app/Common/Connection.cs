@@ -45,7 +45,7 @@ namespace xpra
         }
         public string Nickname { get; set; }
         public bool Default { get; set; }
-        public List<Ap> ApList { get; set; }
+        public List<Display> DisplayList { get; set; }
         public SshClient Ssh { get; set; }
         
         public string Error { get; set; }
@@ -153,23 +153,39 @@ namespace xpra
 
         public Connection()
         {
-            ApList = new List<Ap>();
+            DisplayList = new List<Display>();
         }
-
-        public void AddApp(Ap a) 
-        { 
-            ApList.Add(a); 
-        }
-
-        public Ap GetAppByPath(string apppath)
+        public Display GetDisplay(int id)
         {
-            return ApList.Where(x => x.Path == apppath).FirstOrDefault();
+            return DisplayList.Where(x => x.Id == id).FirstOrDefault();
         }
-        public Ap GetAppByDisplay(int display)
+        public void AddApp(Ap a)
         {
-            return ApList.Where(x => x.Display == display).FirstOrDefault();
-        }
 
+            Display d = DisplayList.Where(x => x.Id == a.DisplayId).FirstOrDefault();
+            if(d == null)
+            {
+                d = new Display(a.DisplayId);
+                DisplayList.Add(d);
+            }
+            d.AddApp(a);
+        }
+        public Ap GetApp(Ap ap)
+        {
+            return null;
+            //return ApList.Where(x => x.Path == apppath).FirstOrDefault();
+        }
+        //public Ap GetAppByDisplay(int display)
+        //{
+        //    return ApList.Where(x => x.Display == display).FirstOrDefault();
+        //}
+        public int ApCount()
+        {
+            int total = 0;
+            foreach (var s in DisplayList)
+                total += s.ApList.Count;
+            return total;
+        }
         #region Run Methods
 
         public ReturnBox RunLocal(string cmd)
