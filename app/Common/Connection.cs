@@ -253,7 +253,7 @@ namespace xpra
                     r.Error = ex.Message;
                 }
             }
-            r.Success = r.ExitCode == 0 && String.IsNullOrEmpty(r.Error);
+            r.Success = r.ExitCode == 0;
             return r;
         }
 

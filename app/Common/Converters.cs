@@ -76,6 +76,7 @@ namespace xpra
                 var items = (ReadOnlyObservableCollection<Object>)value;
                 if (items.Count > 0)
                 {
+
                     return ((Ap)items[0]).DisplayStatus.ToString();
                 }
             }

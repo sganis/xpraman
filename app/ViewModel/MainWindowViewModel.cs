@@ -190,8 +190,12 @@ namespace xpra
                     }
                     else
                     {
-                        display.Status = DisplayStatus.IDLE; // detached
+                        display.Status = DisplayStatus.PAUSED; // detached
                     }
+                }
+                else
+                {
+                    display.Status = DisplayStatus.NOT_USED;
                 }
                 // update apss status
                 foreach (var ap in display.ApList)
@@ -212,7 +216,7 @@ namespace xpra
                         else
                         {
                             ap.Status = ApStatus.BACKGROUND;
-                            ap.DisplayStatus = DisplayStatus.IDLE;
+                            ap.DisplayStatus = DisplayStatus.PAUSED;
                         }
                     }
                     else
@@ -387,7 +391,7 @@ namespace xpra
         }
         private async void OnCloseAllApps(object obj)
         {
-            WorkStart("Closing apps...");
+            WorkStart("Closing all...");
             var status = new Progress<string>(ReportStatus);
             await Task.Run(() =>
             {
@@ -492,7 +496,7 @@ namespace xpra
         {
             var r = new ReturnBox();
             var status = new Progress<string>(ReportStatus);
-            
+
             if (ap.Status == ApStatus.RUNNING)
             {
                 WorkStart($"Closing {ap.Name}...");
@@ -501,44 +505,165 @@ namespace xpra
             }
             else
             {
-                WorkStart($"Running {ap.Name}...");
-                r = await Task.Run(() => MainService.RunAp(SelectedConnection, ap, status));
+                // check display
+                var disp = SelectedConnection.GetDisplay(ap.DisplayId);
+                if (disp == null)
+                {
+                    r.Error = "Display not available";
+                    r.Success = false;
+                }
+                else if (disp.Status == DisplayStatus.NOT_USED)
+                {
+                    WorkStart($"Starting DISPLAY :{disp.Id}...");
+                    r = await Task.Run(() => MainService.XpraStart(SelectedConnection, disp, status));
+                    if(r.Success)
+                    {
+                        WorkStart($"Attaching DISPLAY :{disp.Id}...");
+                        r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, disp, status));
+                    }
+                }
+                else if (disp.Status == DisplayStatus.PAUSED)
+                {
+                    WorkStart($"Attaching DISPLAY :{disp.Id}...");
+                    r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, disp, status));
+                }
+                else
+                {
+                    // display is active
+                    r.Success = true;
+                }
+
+                if (r.Success)
+                {
+                    WorkStart($"Running {ap.Name}...");
+                    r = await Task.Run(() => MainService.RunAp(SelectedConnection, ap, status));
+                    if (int.TryParse(r.Output, out int pid))
+                        ap.Pid = pid;
+                }
             }
 
             WorkDone(r);
         }
-
-        private async void OnAttach(int display)
+        private async void OnPlay(int display)
         {
+            
             var r = new ReturnBox();
             var status = new Progress<string>(ReportStatus);
-            var se = SelectedConnection.GetDisplay(display);
-            if (se == null)
+            var disp = SelectedConnection.GetDisplay(display);
+            if (disp == null)
             {
                 r.Error = "Display not available";
                 r.Success = false;
             }
-            else if (se.Status == DisplayStatus.ACTIVE)
+            else if (disp.Status == DisplayStatus.NOT_USED)
             {
-                WorkStart($"Detaching DISPLAY :{se.Id}...");
-                await Task.Run(() => MainService.Detach(se));
-                r.Success = true;
+                // start
+                disp.IsWorking = true;
+                WorkStart($"Starting DISPLAY :{disp.Id}...");
+                r = await Task.Run(() => MainService.XpraStart(SelectedConnection, disp, status));
+                if (r.Success)
+                {
+                    // attach
+                    WorkStart($"Attaching DISPLAY :{disp.Id}...");
+                    r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, disp, status));
+                    if (r.Success)
+                    {
+                        disp.Status = DisplayStatus.ACTIVE;
+                    }
+                }
+                disp.IsWorking = false;
             }
-            else if(se.Status == DisplayStatus.IDLE)
+            else
             {
-                WorkStart($"Attaching DISPLAY :{se.Id}...");
-                r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, se));
+                // invalid status
             }
-            else // not started
-            {
-                WorkStart($"Attaching DISPLAY :{se.Id}...");
-                r = await Task.Run(() => MainService.XpraStart(SelectedConnection, se));
-            }
-            NotifyPropertyChanged("SelectedConnection");
 
             WorkDone(r);
         }
+        private async void OnPause(int display)
+        {
+            var r = new ReturnBox();
+            var status = new Progress<string>(ReportStatus);
+            var disp = SelectedConnection.GetDisplay(display);
+            if (disp == null)
+            {
+                r.Error = "Display not available";
+                r.Success = false;
+            }
+            else if (disp.Status == DisplayStatus.ACTIVE)
+            {
+                disp.IsWorking = true;
+                WorkStart($"Detaching DISPLAY :{disp.Id}...");
+                r = await Task.Run(() => MainService.Detach(disp, status));
+                if (r.Success)
+                {
+                    disp.Status = DisplayStatus.PAUSED;
+                }
+                disp.IsWorking = false;
+            }
+            else 
+            {
+                // invalid status
+            }
 
+            WorkDone(r);
+        }
+        private async void OnResume(int display)
+        {
+            var r = new ReturnBox();
+            var status = new Progress<string>(ReportStatus);
+            var disp = SelectedConnection.GetDisplay(display);
+            if (disp == null)
+            {
+                r.Error = "Display not available";
+                r.Success = false;
+            }
+            else if (disp.Status == DisplayStatus.PAUSED)
+            {
+                disp.IsWorking = true;
+                WorkStart($"Resuming DISPLAY :{disp.Id}...");
+                r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, disp, status));
+                if (r.Success)
+                {
+                    disp.Status = DisplayStatus.ACTIVE;
+                }
+                disp.IsWorking = false;
+            }
+            else
+            {
+                // invalid status
+            }
+
+            WorkDone(r);
+        }
+        private async void OnStop(int display)
+        {
+            var r = new ReturnBox();
+            var status = new Progress<string>(ReportStatus);
+            var disp = SelectedConnection.GetDisplay(display);
+            if (disp == null)
+            {
+                r.Error = "Display not available";
+                r.Success = false;
+            }
+            else if (disp.Status == DisplayStatus.ACTIVE || disp.Status == DisplayStatus.PAUSED)
+            {
+                disp.IsWorking = true;
+                WorkStart($"Stopping DISPLAY :{disp.Id}...");
+                r = await Task.Run(() => MainService.XpraStop(SelectedConnection, disp, status));
+                if (r.Success)
+                {
+                   disp.Status = DisplayStatus.NOT_USED;
+                }
+                disp.IsWorking = false;
+            }
+            else 
+            {
+                // invalid status
+            }
+
+            WorkDone(r);
+        }
         #endregion
 
         #region Commands
@@ -747,7 +872,7 @@ namespace xpra
             {
                 return _openLogsFolderCommand ??
                     (_openLogsFolderCommand = new RelayCommand(
-                        url => System.Diagnostics.Process.Start("explorer.exe", MainService.LocalAppData)));
+                        url => System.Diagnostics.Process.Start("explorer.exe", MainService.ExePath)));
             }
         }
 
@@ -770,17 +895,74 @@ namespace xpra
                        }));
             }
         }
-        private ICommand _attachCommand;
-        public ICommand AttachCommand
+        private ICommand _playCommand;
+        public ICommand PlayCommand
         {
             get
             {
-                return _attachCommand ??
-                   (_attachCommand = new RelayCommand(
+                return _playCommand ??
+                   (_playCommand = new RelayCommand(
                        x =>
                        {
                            var display = int.Parse(x.ToString());
-                           OnAttach(display);
+                           OnPlay(display);
+                       },
+                       // can execute
+                       x =>
+                       {
+                           return true;
+                       }));
+            }
+        }
+        private ICommand _pauseCommand;
+        public ICommand PauseCommand
+        {
+            get
+            {
+                return _pauseCommand ??
+                   (_pauseCommand = new RelayCommand(
+                       x =>
+                       {
+                           var display = int.Parse(x.ToString());
+                           OnPause(display);
+                       },
+                       // can execute
+                       x =>
+                       {
+                           return true;
+                       }));
+            }
+        }
+        private ICommand _resumeCommand;
+        public ICommand ResumeCommand
+        {
+            get
+            {
+                return _resumeCommand ??
+                   (_resumeCommand = new RelayCommand(
+                       x =>
+                       {
+                           var display = int.Parse(x.ToString());
+                           OnResume(display);
+                       },
+                       // can execute
+                       x =>
+                       {
+                           return true;
+                       }));
+            }
+        }
+        private ICommand _stopCommand;
+        public ICommand StopCommand
+        {
+            get
+            {
+                return _stopCommand ??
+                   (_stopCommand = new RelayCommand(
+                       x =>
+                       {
+                           var display = int.Parse(x.ToString());
+                           OnStop(display);
                        },
                        // can execute
                        x =>

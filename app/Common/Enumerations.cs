@@ -11,7 +11,7 @@
     public enum DisplayStatus
     {
         NOT_USED,
-        IDLE,
+        PAUSED,
         ACTIVE,
     }
     public enum ApStatus

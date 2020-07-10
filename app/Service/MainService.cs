@@ -124,16 +124,38 @@ namespace xpra
             }
 
             status.Report($"Starting {ap.Name}...");
-            var cmd = $"export DISPLAY=:{ap.DisplayId}; \"{ap.Path}\" >/dev/null 2>&1 &";
-            return conn.RunRemote(cmd);
-            
+            var cmd = $"export DISPLAY=:{ap.DisplayId}; \"{ap.Path}\" >/dev/null 2>&1 & echo $!";
+            r = conn.RunRemote(cmd);
+            if (r.Success)
+            {
+                ap.Status = ApStatus.RUNNING;
+                status.Report($"{ap.Name} stated.");
+            }
+            return r;
         }
         public ReturnBox CloseAp(Connection conn, Ap ap, IProgress<string> status)
         {
-            return conn.RunRemote($"kill -9 {ap.Pid}");
+            if (ap.Pid > 0)
+            {
+                var r = conn.RunRemote($"kill -9 {ap.Pid}");
+                if (r.Success)
+                {
+                    ap.Status = ApStatus.NOT_RUNNING;
+                    status.Report($"{ap.Name} closed.");
+                }
+                return r;
+            }
+            else
+            {
+                return new ReturnBox
+                {
+                    Success = false,
+                    Error = "Unknown application process ID"
+                };
+            }
         }
             //status.Rep
-        public ReturnBox XpraStart(Connection conn, Display display)
+        public ReturnBox XpraStart(Connection conn, Display display, IProgress<string> status)
         {
             ReturnBox r = new ReturnBox();
             // todo: check if xpra is running in display
@@ -146,14 +168,34 @@ namespace xpra
 
             return r;
         }
-        public ReturnBox XpraAttach(Connection conn, Display display)
+
+        public ReturnBox XpraStop(Connection conn, Display display, IProgress<string> status)
         {
+            ReturnBox r = new ReturnBox();
+            // todo: check if xpra is running in display
+
+
+            // todo: get extra args from config
+            var extra_server_args = "";
+            var cmd = $"xpra stop :{display.Id} {extra_server_args} ";
+            r = conn.RunRemote(cmd);
+
+            return r;
+        }
+
+        public ReturnBox XpraAttach(Connection conn, Display display, IProgress<string> status)
+        {
+            //var opengl = "--opengl";
+            var opengl = "";
             var cmd = m_xpra_local;
-            var extra_local_args = "--microphone=off --speaker=off --tray=no --dpi=100 --webcam=no --idle-timeout=0 --cursors=yes --opengl=yes --compress=0";
-            var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}:{conn.CurrentPort}/{display.Id} --exit-with-children {extra_local_args}";
+            var extra_local_args = 
+                "--microphone=off --speaker=off --tray=no --dpi=100 " +
+                "--webcam=no --idle-timeout=0 --cursors=yes --compress=0 " +
+                $"{ opengl }";
+            var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}:{conn.CurrentPort}/{display.Id} {extra_local_args}";
             return conn.RunLocal(cmd, args, false);
         }
-        public void Detach(Display display)
+        public ReturnBox Detach(Display display, IProgress<string> status)
         {
             var r = new ReturnBox();
             string cmd = "";
@@ -162,13 +204,15 @@ namespace xpra
                 if (p.ProcessName.Contains("Xpra"))
                 {
                     cmd = ProcCmdLine.GetCommandLineOfProcess(p);
-                    if (Regex.IsMatch(cmd, $@"attach ssh://.+/{display.Id} --exit-with-children"))
+                    if (Regex.IsMatch(cmd, $@"attach ssh://.+/{display.Id} "))
                     {
                         p.Kill();
+                        r.Success = true;
                         break;
                     }
                 }
             }
+            return r;
         }
 
         public void GetProcesses()
@@ -274,11 +318,10 @@ namespace xpra
         }
         public void CloseAllApps(Connection conn, IProgress<string> status)
         {
-            //foreach(var ap in conn.ApList)
-            //{
-            //    status.Report($"Closing {ap.Name}...");
-            //    conn.RunRemote($"xpra stop {ap.Display}");
-            //}
+            foreach (var display in conn.DisplayList)
+            {
+                XpraStop(conn, display, status);
+            }
         }
         public ReturnBox ConnectPassword(Connection conn, string password, IProgress<string> status)
         {

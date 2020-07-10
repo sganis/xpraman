@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace xpra
 {
@@ -19,13 +21,30 @@ namespace xpra
                 if (_status != value)
                 {
                     _status = value;
+
+                    foreach (var ap in ApList)
+                        ap.UpdateStatus(Status);
+
                     NotifyPropertyChanged();
-                    NotifyPropertyChanged("AttachButtonText");
+                    NotifyPropertyChanged("PlayButtonEnabled");
+                    NotifyPropertyChanged("PauseButtonEnabled");
+                    NotifyPropertyChanged("ResumeButtonEnabled");
+                    NotifyPropertyChanged("StopButtonEnabled");
 
                 }
             }
         }
-
+        private bool _isWorking;
+        public bool IsWorking { 
+            get { return _isWorking; }
+            set {
+                if (_isWorking != value)
+                {
+                    _isWorking = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
         private int  _id;
 
         public int Id
@@ -53,17 +72,33 @@ namespace xpra
                 }
             }
         }
-        public string AttachButtonText
+
+        public bool PlayButtonEnabled
         {
             get
             {
-                if (Status == DisplayStatus.NOT_USED)
-                    return "START";
-                if (Status == DisplayStatus.IDLE)
-                    return "ATTACH";
-                if (Status == DisplayStatus.ACTIVE)
-                    return "DETACH";
-                return "N/A";
+                return Status == DisplayStatus.NOT_USED;
+            }
+        }
+        public bool PauseButtonEnabled
+        {
+            get
+            {
+                return Status == DisplayStatus.ACTIVE;
+            }
+        }
+        public bool ResumeButtonEnabled
+        {
+            get
+            {
+                return Status == DisplayStatus.PAUSED;
+            }
+        }
+        public bool StopButtonEnabled
+        {
+            get
+            {
+                return Status == DisplayStatus.PAUSED || Status == DisplayStatus.ACTIVE;
             }
         }
         public Display(int id)

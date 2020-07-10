@@ -13,28 +13,17 @@
   		    "display" : 100,     
   		},
   		{
-  			"name" : "Browser",
-  			"path" : "/usr/bin/firefox",
-  		    "host" : "192.168.100.201",
+  			"name" : "VS Code",
+  			"path" : "/home/sant/Downloads/VSCode-linux-x64/code",
+  		    "host" : "192.168.100.41",
   		    "display" : 101,     
   		},
-  		{
-  			"name" : "Browser",
-  			"path" : "/usr/bin/firefox",
-  		    "host" : "192.168.100.201",
-  		    "display" : 102,     
-  		},
-  		{
-  			"name" : "Browser",
-  			"path" : "/usr/bin/firefox",
-  		    "host" : "192.168.100.201",
-  		    "display" : 103,     
-  		},
-  		{
-  			"name" : "Browser",
-  			"path" : "/usr/bin/firefox",
+        {
+  			"name" : "Text Editor",
+  			"path" : "/usr/bin/gedit",
   		    "host" : "192.168.100.41",
-  		    "display" : 104,     
+  		    "display" : 100,     
   		},
+
   	],
 }

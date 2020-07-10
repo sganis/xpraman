@@ -21,7 +21,7 @@ namespace xpra
                 {
                     _displayStatus = value;
                     NotifyPropertyChanged();
-                    NotifyPropertyChanged("AttachButtonText");
+                    //NotifyPropertyChanged("AttachButtonText");
                     NotifyPropertyChanged("RunButtonText");
                     NotifyPropertyChanged("RunButtonColor");
                     NotifyPropertyChanged("ApList");
@@ -37,11 +37,43 @@ namespace xpra
                 if (_status != value)
                 {
                     _status = value;
+
+
+
                     NotifyPropertyChanged();
-                    NotifyPropertyChanged("AttachButtonText");
+                    NotifyPropertyChanged("StatusText");
                     NotifyPropertyChanged("RunButtonText");
                     NotifyPropertyChanged("RunButtonColor");
                 }
+            }
+        }
+        public void UpdateStatus(DisplayStatus dispStatus)
+        {
+            switch (Status)
+            {
+                case ApStatus.RUNNING:
+                    if (dispStatus == DisplayStatus.NOT_USED)
+                        Status = ApStatus.NOT_RUNNING;
+                    else if (dispStatus == DisplayStatus.PAUSED)
+                        Status = ApStatus.BACKGROUND;
+                    break;
+                case ApStatus.BACKGROUND:
+                    if (dispStatus == DisplayStatus.NOT_USED)
+                        Status = ApStatus.NOT_RUNNING;
+                    else if (dispStatus == DisplayStatus.ACTIVE)
+                        Status = ApStatus.RUNNING;
+                    break;
+            }
+
+        }
+
+        public string StatusText
+        {
+            get
+            {
+                return _status == ApStatus.RUNNING ? "Running" :
+                    _status == ApStatus.BACKGROUND ? "Background" :
+                    "";
             }
         }
         public int DisplayId { get; set; }

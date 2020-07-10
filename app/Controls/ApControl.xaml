@@ -64,7 +64,7 @@
                 HorizontalAlignment="Right"/>
         </DockPanel>
 
-        <local:StretchingTreeView Grid.Row="2" 
+        <local:StretchingTreeView Grid.Row="2"
                                   Padding="0 0 20 0"
                                   x:Name="MainTreeView" HorizontalAlignment="Stretch" 
                                   Margin="10" VerticalAlignment="Stretch" 
@@ -77,22 +77,73 @@
                 <HierarchicalDataTemplate DataType="{x:Type local:Display}"
                                           ItemsSource="{Binding ApList}">
                     <Border  BorderBrush="Gray" BorderThickness="1">
-                        <Grid Margin="20">
+                        <Grid Margin="10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding Id}" Margin="10" />
-                                <TextBlock Text="{Binding Status}" Margin="10"/>
+                                <TextBlock Text="DISPLAY  :" Margin="10 15 0 0" />
+                                <TextBlock Text="{Binding Id}" Margin="0 15 10 0" />
+                                <TextBlock Text="{Binding Status}" Margin="10 15 0 0"/>
                             </StackPanel>
-                            <Button Grid.Column="1" 
-                                    Content="{Binding AttachButtonText}"
+                            <StackPanel Orientation="Horizontal" Grid.Column="1">
+                                <Button
+                                    ToolTip="Stop Display"
                                     Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
-                                        Path=DataContext.AttachCommand}" 
+                                        Path=DataContext.StopCommand}" 
                                     CommandParameter="{Binding Id}"
-                                    Width="100" Height="30">
-                            </Button>
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    Visibility="{Binding StopButtonEnabled, Converter={local:BoolToVis}}"
+                                    IsEnabled="{Binding IsWorking, Converter={local:NegateBoolConverter}}">
+                                    <materialDesign:PackIcon Kind="Stop" Width="30" Height="30" Foreground="Red"/>
+                                </Button>
+                                <Button 
+                                    ToolTip="Pause Display (Detatch)"
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
+                                        Path=DataContext.PauseCommand}" 
+                                    CommandParameter="{Binding Id}"
+                                    Style="{StaticResource MaterialDesignIconButton}"                                    
+                                    Visibility="{Binding PauseButtonEnabled, Converter={local:BoolToVis}}"
+                                    IsEnabled="{Binding PauseButtonEnabled}">
+                                    <materialDesign:PackIcon Kind="Pause" Width="30" Height="30" Foreground="Blue"/>
+                                </Button>
+                                <Button 
+                                    ToolTip="Resume Display (Attach)"
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
+                                        Path=DataContext.ResumeCommand}" 
+                                    CommandParameter="{Binding Id}"
+                                    Style="{StaticResource MaterialDesignIconButton}"                                    
+                                    Visibility="{Binding ResumeButtonEnabled, Converter={local:BoolToVis}}"
+                                    IsEnabled="{Binding ResumeButtonEnabled}">
+                                    <materialDesign:PackIcon Kind="PlayPause" Width="30" Height="30" Foreground="Orange"/>
+                                </Button>
+                                <Button
+                                    ToolTip="Start Display"
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
+                                        Path=DataContext.PlayCommand}" 
+                                    CommandParameter="{Binding Id}"                                    
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    Visibility="{Binding PlayButtonEnabled, Converter={local:BoolToVis}}"
+                                    IsEnabled="{Binding PlayButtonEnabled}">
+                                    <materialDesign:PackIcon Kind="Play" Width="30" Height="30" Foreground="Green" />
+                                </Button>
+                            </StackPanel>
+                            
+                            <!--<Button Grid.Column="1" 
+                                    Margin="0 0 10 0"
+                                    Visibility="{Binding AttachButtonVisibility}"
+                                    Content="{Binding AttachButtonText}"
+                                    
+                                    Width="100" Height="40">
+                            </Button>-->
+                            <!--<Button Grid.Column="2" 
+                                    Content="{Binding StartButtonText}"
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
+                                        Path=DataContext.StartCommand}" 
+                                    CommandParameter="{Binding Id}"
+                                    Width="100" Height="40">
+                            </Button>-->
                         </Grid>
                     </Border>
                 </HierarchicalDataTemplate>
@@ -102,13 +153,13 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="80"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" FontSize="30" Margin="10 10 0 0"/>
-                            <TextBlock Text="{Binding Status}"  Grid.Column="1" Margin="10 20 20 0"/>
+                            <TextBlock Text="{Binding Name}" FontSize="20" Margin="10 10 0 0"/>
+                            <TextBlock Text="{Binding StatusText}"  Grid.Column="1" Margin="10 20 40 0"/>
                             <Button Content="{Binding RunButtonText}"
                                     Grid.Column="2" 
-                                    Width="100"
+                                    Width="80"
                                     Height="30"
                                     Background="{Binding RunButtonColor }"
                                     BorderBrush="{Binding RunButtonColor }"
@@ -124,6 +175,14 @@
                     </StackPanel>
                     
                 </DataTemplate>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                    Color="Transparent" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                    Color="Black" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+                    Color="Transparent" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}"
+                    Color="Black" />
             </local:StretchingTreeView.Resources>
             <local:StretchingTreeView.ItemContainerStyle>
                 <Style TargetType="TreeViewItem">
@@ -135,72 +194,6 @@
 
         </local:StretchingTreeView>
 
-        <!--<ScrollViewer Visibility="Collapsed" VerticalScrollBarVisibility="Auto"
-                      Grid.Row="2" Padding="0,0,20,0">
-            <ItemsControl Name="appsListBox" 
-                 ItemsSource="{Binding Source={StaticResource cvs}}"                 
-                 HorizontalContentAlignment="Stretch">
-                <ItemsControl.GroupStyle>
-                    <GroupStyle>
-                        <GroupStyle.HeaderTemplate>
-                            <DataTemplate>
-                                <Border Padding="10" BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Path=Name}"
-                                           Padding="10"
-                                           FontWeight="Bold" 
-                                           />
-                                        <TextBlock Text="{Binding Path=Items, Converter={StaticResource displayToStatusConverter}}"  
-                                                   Grid.Column="1"
-                                                   Padding="10" />
-                                        <Button Content="{Binding Path=Items, Converter={StaticResource displayToActionTextConverter}}"
-                                                Grid.Column="2"
-                                                Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}},
-                                                    Path=DataContext.AttachCommand}" 
-                                                CommandParameter="{Binding Path=Name}" >
-                                        </Button>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </GroupStyle.HeaderTemplate>
-                    </GroupStyle>
-                </ItemsControl.GroupStyle>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Margin="0 0 0 20">
-                            <TextBlock Text="{Binding Name}" FontSize="30" Margin="10 10 0 0"/>
-                            <Border Height="2" Margin="20,5,0,0" BorderThickness="0 0 0 1"
-                                BorderBrush="{DynamicResource MaterialDesignDivider}"/>
-                            <Grid d:DesignWidth="384.268" d:DesignHeight="100.705"
-                                  Margin="20 0 20 0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="100"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Height="Auto">
-                                    <TextBlock Text="{Binding Path}" Margin="20 10 0 0"/>
-                                    <TextBlock Text="{Binding Status}" Margin="20 10 0 0"/>
-                                </StackPanel>
-                                <Button Content="{Binding RunButtonText}"
-                                    Grid.Column="1" Height="30"
-                                    Background="{Binding RunButtonColor }"
-                                    BorderBrush="{Binding RunButtonColor }"
-                                        
-                                    Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListBox}},
-                                        Path=DataContext.RunApCommand}" 
-                                    CommandParameter="{Binding Path}" >
-                                </Button>
-                            </Grid>
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>-->
         <StackPanel Grid.Row="3">
             <TextBlock Text="{Binding Message}"
                        Visibility="{Binding IsWorking, Converter={local:BoolToVis}}"   />

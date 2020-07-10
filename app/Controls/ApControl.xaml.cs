@@ -1,5 +1,7 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace xpra
 {
@@ -17,5 +19,6 @@ namespace xpra
             vm.OnComboChanged();
             
         }
+
     }
 }
