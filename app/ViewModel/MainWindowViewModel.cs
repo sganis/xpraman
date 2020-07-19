@@ -15,8 +15,8 @@ namespace xpra
         #region Properties
 
         static string XPRA = "Xpra-Client-Python3-x86_64_4.0.2-r26625";
-
         static string XPRA_LOCAL = $@"C:\{XPRA}\Xpra.exe";        
+        
         const string HostRegex = @"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$";
 
         public event EventHandler<FocusRequestedEventArgs> FocusRequested;
@@ -225,9 +225,11 @@ namespace xpra
                         ap.Status = ApStatus.NOT_RUNNING;
                     }
                 }
+                
+                display.IsCheckingStatus = false;
             }
             IsCheckingStatus = false;
-
+            
         }
 
         #endregion
@@ -497,7 +499,10 @@ namespace xpra
             var r = new ReturnBox();
             var status = new Progress<string>(ReportStatus);
 
-            if (ap.Status == ApStatus.RUNNING)
+            if (!SelectedConnection.Connected)
+                SelectedConnection.Connect();
+
+            if (ap.Status != ApStatus.NOT_RUNNING)
             {
                 WorkStart($"Closing {ap.Name}...");
                 await Task.Run(() => MainService.CloseAp(SelectedConnection, ap, status));
@@ -558,7 +563,7 @@ namespace xpra
             else if (disp.Status == DisplayStatus.NOT_USED)
             {
                 // start
-                disp.IsWorking = true;
+                disp.IsCheckingStatus = true;
                 WorkStart($"Starting DISPLAY :{disp.Id}...");
                 r = await Task.Run(() => MainService.XpraStart(SelectedConnection, disp, status));
                 if (r.Success)
@@ -571,7 +576,7 @@ namespace xpra
                         disp.Status = DisplayStatus.ACTIVE;
                     }
                 }
-                disp.IsWorking = false;
+                disp.IsCheckingStatus = false;
             }
             else
             {
@@ -592,14 +597,14 @@ namespace xpra
             }
             else if (disp.Status == DisplayStatus.ACTIVE)
             {
-                disp.IsWorking = true;
+                disp.IsCheckingStatus = true;
                 WorkStart($"Detaching DISPLAY :{disp.Id}...");
                 r = await Task.Run(() => MainService.Detach(disp, status));
                 if (r.Success)
                 {
                     disp.Status = DisplayStatus.PAUSED;
                 }
-                disp.IsWorking = false;
+                disp.IsCheckingStatus = false;
             }
             else 
             {
@@ -620,14 +625,14 @@ namespace xpra
             }
             else if (disp.Status == DisplayStatus.PAUSED)
             {
-                disp.IsWorking = true;
+                disp.IsCheckingStatus = true;
                 WorkStart($"Resuming DISPLAY :{disp.Id}...");
                 r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, disp, status));
                 if (r.Success)
                 {
                     disp.Status = DisplayStatus.ACTIVE;
                 }
-                disp.IsWorking = false;
+                disp.IsCheckingStatus = false;
             }
             else
             {
@@ -648,14 +653,14 @@ namespace xpra
             }
             else if (disp.Status == DisplayStatus.ACTIVE || disp.Status == DisplayStatus.PAUSED)
             {
-                disp.IsWorking = true;
+                disp.IsCheckingStatus = true;
                 WorkStart($"Stopping DISPLAY :{disp.Id}...");
                 r = await Task.Run(() => MainService.XpraStop(SelectedConnection, disp, status));
                 if (r.Success)
                 {
                    disp.Status = DisplayStatus.NOT_USED;
                 }
-                disp.IsWorking = false;
+                disp.IsCheckingStatus = false;
             }
             else 
             {

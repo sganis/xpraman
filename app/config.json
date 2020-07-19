@@ -13,6 +13,25 @@
   		    "display" : 100,     
   		},
   		{
+  			"name" : "QtCreator",
+  			"path" : "/home/sant/Qt/Tools/QtCreator/bin/qtcreator",
+  		    "host" : "192.168.100.201",
+  		    "display" : 100,     
+  		},
+  		{
+  			"name" : "VS Code",
+  			"path" : "/home/sant/Downloads/VSCode-linux-x64/code",
+  		    "host" : "192.168.100.201",
+  		    "display" : 101,     
+  		},
+        {
+  			"name" : "Gnome-Terminal",
+  			"path" : "/usr/bin/gnome-terminal",
+  		    "host" : "192.168.100.201",
+  		    "display" : 101,     
+  		},
+
+  		{
   			"name" : "VS Code",
   			"path" : "/home/sant/Downloads/VSCode-linux-x64/code",
   		    "host" : "192.168.100.41",

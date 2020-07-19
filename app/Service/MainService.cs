@@ -165,7 +165,10 @@ namespace xpra
             var extra_server_args = "";
             var cmd = $"xpra start :{display.Id} {extra_server_args} ";
             r = conn.RunRemote(cmd);
-
+            if (!r.Success)
+            {
+                status.Report($"Xpra start error: {r.Error}");
+            }
             return r;
         }
 
@@ -189,7 +192,7 @@ namespace xpra
             var opengl = "";
             var cmd = m_xpra_local;
             var extra_local_args = 
-                "--microphone=off --speaker=off --tray=no --dpi=100 " +
+                "--microphone=off --speaker=off --tray=no " +
                 "--webcam=no --idle-timeout=0 --cursors=yes --compress=0 " +
                 $"{ opengl }";
             var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}:{conn.CurrentPort}/{display.Id} {extra_local_args}";

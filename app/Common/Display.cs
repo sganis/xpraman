@@ -30,23 +30,24 @@ namespace xpra
                     NotifyPropertyChanged("PauseButtonEnabled");
                     NotifyPropertyChanged("ResumeButtonEnabled");
                     NotifyPropertyChanged("StopButtonEnabled");
+                    NotifyPropertyChanged("IsCheckingStatus");
 
                 }
             }
         }
-        private bool _isWorking;
-        public bool IsWorking { 
-            get { return _isWorking; }
+        private bool _isCheckingStatus;
+        public bool IsCheckingStatus { 
+            get { return _isCheckingStatus; }
             set {
-                if (_isWorking != value)
+                if (_isCheckingStatus != value)
                 {
-                    _isWorking = value;
+                    _isCheckingStatus = value;
                     NotifyPropertyChanged();
                 }
             }
         }
-        private int  _id;
 
+        private int  _id;
         public int Id
         {
             get { return _id; }
@@ -105,6 +106,7 @@ namespace xpra
         {
             ApList = new List<Ap>();
             Id = id;
+            IsCheckingStatus = true;
         }
         public void AddApp(Ap a)
         {

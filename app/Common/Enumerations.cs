@@ -13,6 +13,7 @@
         NOT_USED,
         PAUSED,
         ACTIVE,
+        UNKNOWN,
     }
     public enum ApStatus
     {

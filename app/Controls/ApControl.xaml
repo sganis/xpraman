@@ -95,7 +95,7 @@
                                     CommandParameter="{Binding Id}"
                                     Style="{StaticResource MaterialDesignIconButton}"
                                     Visibility="{Binding StopButtonEnabled, Converter={local:BoolToVis}}"
-                                    IsEnabled="{Binding IsWorking, Converter={local:NegateBoolConverter}}">
+                                    IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
                                     <materialDesign:PackIcon Kind="Stop" Width="30" Height="30" Foreground="Red"/>
                                 </Button>
                                 <Button 
@@ -105,7 +105,7 @@
                                     CommandParameter="{Binding Id}"
                                     Style="{StaticResource MaterialDesignIconButton}"                                    
                                     Visibility="{Binding PauseButtonEnabled, Converter={local:BoolToVis}}"
-                                    IsEnabled="{Binding PauseButtonEnabled}">
+                                    IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
                                     <materialDesign:PackIcon Kind="Pause" Width="30" Height="30" Foreground="Blue"/>
                                 </Button>
                                 <Button 
@@ -115,7 +115,7 @@
                                     CommandParameter="{Binding Id}"
                                     Style="{StaticResource MaterialDesignIconButton}"                                    
                                     Visibility="{Binding ResumeButtonEnabled, Converter={local:BoolToVis}}"
-                                    IsEnabled="{Binding ResumeButtonEnabled}">
+                                    IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
                                     <materialDesign:PackIcon Kind="PlayPause" Width="30" Height="30" Foreground="Orange"/>
                                 </Button>
                                 <Button
@@ -125,7 +125,7 @@
                                     CommandParameter="{Binding Id}"                                    
                                     Style="{StaticResource MaterialDesignIconButton}"
                                     Visibility="{Binding PlayButtonEnabled, Converter={local:BoolToVis}}"
-                                    IsEnabled="{Binding PlayButtonEnabled}">
+                                    IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
                                     <materialDesign:PackIcon Kind="Play" Width="30" Height="30" Foreground="Green" />
                                 </Button>
                             </StackPanel>
