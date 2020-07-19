@@ -151,7 +151,9 @@ namespace xpra
 
             
             if (rb != null)
-                Message = rb.Error;           
+                Message = rb.Error;
+
+            Logger.Log("Application started.");
         }
         #endregion
 

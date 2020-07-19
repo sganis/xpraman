@@ -53,7 +53,7 @@
                             Content="Open Terminal"
                             Command="{Binding RunTerminalCommand}" />
                         <Button
-                            Content="Open Config/Logs Location"
+                            Content="Open Config Folder"
                             Command="{Binding OpenLogsFolderCommand}" />
                         <Button
                             Content="About"
