@@ -137,7 +137,7 @@ namespace xpra
         {
             if (ap.Pid > 0)
             {
-                var r = conn.RunRemote($"kill -9 {ap.Pid}");
+                var r = conn.RunRemote($"kill -- -{ap.Pgid}");
                 if (r.Success)
                 {
                     ap.Status = ApStatus.NOT_RUNNING;
@@ -245,18 +245,19 @@ namespace xpra
                     continue;
                 int disp_int = int.Parse(disp_str.Split(':')[1]);
                 
-                // get pid,command
-                r = conn.RunRemote($"ps uxe |grep \"DISPLAY={disp_str}\" |grep -v grep |awk '{{print $2\",\"$11}}'");
+                // get pid,pgid,command
+                r = conn.RunRemote($"ps exo pid,pgid,args |grep \"DISPLAY={disp_str}\" |grep -v grep |awk '{{print $1\",\"$2\",\"$3}}'");
                 
                 foreach (var pid_path in r.Output.Split('\n'))
                 {
                     var app = new Ap();
                     var aux = pid_path.Split(',');
-                    if (aux.Length != 2)
+                    if (aux.Length < 3)
                         continue;
                     app.Pid = int.Parse(aux[0]);
+                    app.Pgid = int.Parse(aux[1]);
                     app.DisplayId = disp_int;
-                    app.Path = aux[1];
+                    app.Process = aux[2];
                     app.Status = ApStatus.BACKGROUND;
                     apps.Add(app);
                 }

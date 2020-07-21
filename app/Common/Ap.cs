@@ -9,7 +9,9 @@ namespace xpra
     public class Ap : Observable
     {
         public int Pid { get; set; }
+        public int Pgid { get; set; }
         public string Path { get; set; }
+        public string Process { get; set; }
         public string Name { get; set; }
         public string Host { get; set; }
         private DisplayStatus _displayStatus;

@@ -202,12 +202,15 @@ namespace xpra
                 // update apss status
                 foreach (var ap in display.ApList)
                 {
-                    var ap_server = apsServer.Where(x => x.Path == ap.Path && x.DisplayId == display.Id).FirstOrDefault();
+                    if (ap.Name.Contains("Subl"))
+                        ap.ToString();
+
+                    var ap_server = apsServer.Where(x => x.Process == ap.Process && x.DisplayId == display.Id).FirstOrDefault();
 
                     if (ap_server != null)
                     {
                         // ap is running in server, check local
-                        ap.Pid = ap_server.Pid;
+                        ap.Pgid = ap_server.Pgid;
 
                         if (disp_local > 0)
                         {

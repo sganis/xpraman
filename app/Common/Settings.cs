@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 
@@ -43,6 +44,10 @@ namespace xpra
                         DisplayId = int.Parse("0" + ap["display"]),
 
                     };
+                    if (ap.ContainsKey("process"))
+                        appobj.Process = ap["process"];
+                    else
+                        appobj.Process = ap["path"];
                     Connection conn = ConnectionList.Where(x => x.Host == appobj.Host).FirstOrDefault();
                     if (conn == null)
                     {

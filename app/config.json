@@ -25,10 +25,11 @@
   		    "display" : 101,     
   		},
         {
-  			"name" : "Gnome-Terminal",
-  			"path" : "/usr/bin/gnome-terminal",
+  			"name" : "Sublime",
+  			"path" : "/snap/bin/subl",
+  		    "process" : "/snap/sublime-text/85/opt/sublime_text/sublime_text",                        
   		    "host" : "192.168.100.201",
-  		    "display" : 101,     
+  		    "display" : 100,     
   		},
 
   		{
