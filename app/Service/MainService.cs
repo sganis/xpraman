@@ -135,7 +135,7 @@ namespace xpra
         }
         public ReturnBox CloseAp(Connection conn, Ap ap, IProgress<string> status)
         {
-            if (ap.Pid > 0)
+            if (ap.Pgid > 0)
             {
                 var r = conn.RunRemote($"kill -- -{ap.Pgid}");
                 if (r.Success)
