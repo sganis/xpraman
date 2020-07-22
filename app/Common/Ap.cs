@@ -92,15 +92,15 @@ namespace xpra
         {
             get
             {
-                //if (Status == ApStatus.NOT_RUNNING)
-                //    return "Purple";
+                if (Status == ApStatus.NOT_RUNNING)
+                    return "CadetBlue"; 
                 if (Status == ApStatus.BACKGROUND)
-                    return "Purple";
+                    return "#673ab7"; // purple
                 if (Status == ApStatus.RUNNING)
                     return "ForestGreen";
-                if (Status == ApStatus.UNKNOWN)
-                    return "DimGray";
-                return "CadetBlue";
+                // unknown 
+                return "DimGray";
+               
             }
         }
         public Ap()

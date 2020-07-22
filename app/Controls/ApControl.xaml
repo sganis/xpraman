@@ -107,17 +107,22 @@
                              BorderThickness="1" 
                              CornerRadius="4"
                              Style="{StaticResource hoverItemStyle}">
-                        <Grid>
+                        <Grid Margin="4">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AppleAirplay"
+                                                     Margin="10"
+                                                     Width="30" Height="30" 
+                                                    Foreground="{Binding IconColor}"/>
+                            <StackPanel Orientation="Horizontal" Grid.Column="1">
                                 <TextBlock Text="DISPLAY  :" Margin="10 15 0 0" />
                                 <TextBlock Text="{Binding Id}" Margin="0 15 10 0" />
-                                <TextBlock Text="{Binding Status}" Margin="10 15 0 0"/>
+                                <TextBlock Text="{Binding StatusText}" Margin="10 15 0 0"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Grid.Column="1">
+                            <StackPanel Orientation="Horizontal" Grid.Column="2">
                                 <Button
                                     ToolTip="Stop Display"
                                     Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
@@ -136,7 +141,7 @@
                                     Style="{StaticResource MaterialDesignIconButton}"                                    
                                     Visibility="{Binding PauseButtonEnabled, Converter={local:BoolToVis}}"
                                     IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
-                                    <materialDesign:PackIcon Kind="Pause" Width="30" Height="30" Foreground="Blue"/>
+                                    <materialDesign:PackIcon Kind="Pause" Width="30" Height="30" Foreground="Purple"/>
                                 </Button>
                                 <Button 
                                     ToolTip="Resume Display (Attach)"
@@ -146,7 +151,7 @@
                                     Style="{StaticResource MaterialDesignIconButton}"                                    
                                     Visibility="{Binding ResumeButtonEnabled, Converter={local:BoolToVis}}"
                                     IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
-                                    <materialDesign:PackIcon Kind="PlayPause" Width="30" Height="30" Foreground="Orange"/>
+                                    <materialDesign:PackIcon Kind="PlayPause" Width="30" Height="30" Foreground="Green"/>
                                 </Button>
                                 <Button
                                     ToolTip="Start Display"
@@ -163,34 +168,50 @@
                     </Border>
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type local:Ap}">
-                    <Border CornerRadius="4"
-                            Style="{StaticResource hoverItemStyle}">
-                        <StackPanel Margin="10 0 0 0">
-                            <Grid Margin="0 10 10 0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="80"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Name}" FontSize="20" VerticalAlignment="Bottom"/>
-                                <TextBlock Text="{Binding StatusText}"  Grid.Column="1" Margin="10 0 40 0" VerticalAlignment="Bottom"/>
-                                <Button Content="{Binding RunButtonText}"
-                                        VerticalAlignment="Bottom"
-                                        Grid.Column="2" 
-                                        Width="80"
-                                        Height="30"
-                                        Background="{Binding RunButtonColor }"
-                                        BorderBrush="{Binding RunButtonColor }"
-                                        Margin="0 4 0 0"    
-                                        Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
-                                            Path=DataContext.RunApCommand}" 
-                                        CommandParameter="{Binding}" >
-                                </Button>
-                            </Grid>
-                            <Border Height="2" Margin="0,2,10,0" BorderThickness="0 0 0 1"
-                                    BorderBrush="{DynamicResource MaterialDesignDivider}"/>
-                            <TextBlock Text="{Binding Path}" Margin="0 0 0 10"/>
-                        </StackPanel>
+                    <Border CornerRadius="4" Style="{StaticResource hoverItemStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Kind="CogOutline"
+                                                     Width="30" Height="30" 
+                                                     Margin="0 20 0 0"
+                                                     Foreground="{Binding RunButtonColor}"/>
+                            <StackPanel Margin="10 0 0 0" Grid.Column="1">
+                                <Grid Margin="0 10 10 0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="80"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Name}" 
+                                                Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                               VerticalAlignment="Bottom"/>
+                                    <TextBlock Text="{Binding StatusText}"  
+                                               Grid.Column="1" Margin="10 0 40 0" VerticalAlignment="Bottom"/>
+                                    <Button Content="{Binding RunButtonText}"
+                                            VerticalAlignment="Bottom"
+                                            Grid.Column="2" 
+                                            Width="80"
+                                            Height="30"
+                                            Background="{Binding RunButtonColor }"
+                                            BorderBrush="{Binding RunButtonColor }"
+                                            Margin="0 4 0 0"    
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
+                                                Path=DataContext.RunApCommand}" 
+                                            CommandParameter="{Binding}" >
+                                    </Button>
+                                </Grid>
+                                <Border Margin="0,4,10,0" 
+                                        BorderThickness="1" 
+                                        BorderBrush="{DynamicResource MaterialDesignDivider}"/>
+                                <TextBlock                                     
+                                    Text="{Binding Path}"                                    
+                                    Margin="0 2 0 10"
+                                    Style="{StaticResource MaterialDesignBody2TextBlock}" Foreground="Gray"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                 </DataTemplate>
                 <!--<SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Opacity=".2" Color="{x:Static SystemColors.HotTrackColor}" />-->

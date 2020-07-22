@@ -31,6 +31,8 @@ namespace xpra
                     NotifyPropertyChanged("ResumeButtonEnabled");
                     NotifyPropertyChanged("StopButtonEnabled");
                     NotifyPropertyChanged("IsCheckingStatus");
+                    NotifyPropertyChanged("IconColor");
+                    NotifyPropertyChanged("StatusText");
 
                 }
             }
@@ -100,6 +102,28 @@ namespace xpra
             get
             {
                 return Status == DisplayStatus.PAUSED || Status == DisplayStatus.ACTIVE;
+            }
+        }
+        public string IconColor
+        {
+            get
+            {
+                if (Status == DisplayStatus.ACTIVE)
+                    return "ForestGreen";
+                if (Status == DisplayStatus.NOT_USED)
+                    return "Black";
+                if (Status == DisplayStatus.PAUSED)
+                    return "#673ab7"; // purple
+                return "Black";
+            }
+        }
+        public string StatusText
+        {
+            get
+            {
+                return _status == DisplayStatus.ACTIVE ? "ACTIVE" :
+                    _status == DisplayStatus.PAUSED ? "PAUSED" :
+                    "";
             }
         }
         public Display(int id)
