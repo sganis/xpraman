@@ -26,6 +26,7 @@ namespace xpra
 
         string m_xpra_local;
 
+        Settings m_settings;
 
         public ObservableCollection<Connection> ConnectionList { get; set; } = new ObservableCollection<Connection>();
         public Connection SelectedConnection { get; set; } = new Connection();
@@ -60,6 +61,8 @@ namespace xpra
 
         public void UpdateFromSettings(Settings settings)
         {
+            m_settings = settings;
+
             if (settings.ConnectionList.Count > 0) {
                 foreach (var c in settings.ConnectionList)
                     ConnectionList.Add(c);
@@ -158,12 +161,8 @@ namespace xpra
         public ReturnBox XpraStart(Connection conn, Display display, IProgress<string> status)
         {
             ReturnBox r = new ReturnBox();
-            // todo: check if xpra is running in display
-
-
-            // todo: get extra args from config
-            var extra_server_args = "";
-            var cmd = $"xpra start :{display.Id} {extra_server_args} ";
+            
+            var cmd = $"xpra start :{display.Id} {m_settings.XpraServerArgs} ";
             r = conn.RunRemote(cmd);
             if (!r.Success)
             {
@@ -175,12 +174,7 @@ namespace xpra
         public ReturnBox XpraStop(Connection conn, Display display, IProgress<string> status)
         {
             ReturnBox r = new ReturnBox();
-            // todo: check if xpra is running in display
-
-
-            // todo: get extra args from config
-            var extra_server_args = "";
-            var cmd = $"xpra stop :{display.Id} {extra_server_args} ";
+            var cmd = $"xpra stop :{display.Id}";
             r = conn.RunRemote(cmd);
 
             return r;
@@ -191,11 +185,11 @@ namespace xpra
             //var opengl = "--opengl";
             var opengl = "";
             var cmd = m_xpra_local;
-            var extra_local_args = 
+            var param = 
                 "--microphone=off --speaker=off --tray=no " +
                 "--webcam=no --idle-timeout=0 --cursors=yes --compress=0 " +
                 $"{ opengl }";
-            var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}:{conn.CurrentPort}/{display.Id} {extra_local_args}";
+            var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}:{conn.CurrentPort}/{display.Id} {param} {m_settings.XpraClientArgs}";
             return conn.RunLocal(cmd, args, false);
         }
         public ReturnBox Detach(Display display, IProgress<string> status)

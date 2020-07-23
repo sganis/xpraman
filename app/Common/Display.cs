@@ -109,11 +109,11 @@ namespace xpra
             get
             {
                 if (Status == DisplayStatus.ACTIVE)
-                    return "ForestGreen";
+                    return "DarkGreen";
                 if (Status == DisplayStatus.NOT_USED)
                     return "Black";
                 if (Status == DisplayStatus.PAUSED)
-                    return "#673ab7"; // purple
+                    return "Purple"; // purple
                 return "Black";
             }
         }

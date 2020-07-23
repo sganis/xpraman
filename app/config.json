@@ -1,4 +1,6 @@
 ﻿{
+    "xpra_server_args": "",
+    "xpra_client_args": "--opengl=no",
     "apps" : [
   		{
   			"name" : "Terminal",

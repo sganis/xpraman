@@ -12,7 +12,9 @@ namespace xpra
     public class Settings
     {
         public List<Connection> ConnectionList { get; set; }
-
+        public string XpraServerArgs { get; set; }
+        public string XpraClientArgs { get; set; }
+        
         [JsonIgnore]
         public string Filename { get; set; }
 
@@ -29,6 +31,15 @@ namespace xpra
             try
             {
                 var json = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(Filename));
+                
+                // todo: escape and remove semicolon to avoid command injection
+                if (json.ContainsKey("xpra_server_args"))
+                XpraServerArgs = json["xpra_server_args"].ToString();
+                if (json.ContainsKey("xpra_client_args"))
+                    XpraClientArgs = json["xpra_client_args"].ToString();
+
+                
+
                 if (!json.ContainsKey("apps"))
                     return;
                 var apps = JsonConvert.DeserializeObject<List<object>>(json["apps"].ToString());

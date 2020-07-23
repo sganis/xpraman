@@ -93,9 +93,9 @@ namespace xpra
             get
             {
                 if (Status == ApStatus.NOT_RUNNING)
-                    return "CadetBlue"; 
+                    return "SlateGray"; 
                 if (Status == ApStatus.BACKGROUND)
-                    return "#673ab7"; // purple
+                    return "DarkMagenta"; // purple
                 if (Status == ApStatus.RUNNING)
                     return "ForestGreen";
                 // unknown 

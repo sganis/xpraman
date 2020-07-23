@@ -12,7 +12,7 @@
         <StackPanel
             HorizontalAlignment="Center">
             <Image
-                Source="/xpra-app;component/xpra.png"
+                Source="/xpra-manager;component/xpra.png"
                 Width="100" />
             <TextBlock
                 Text="Xpra App Manager"
