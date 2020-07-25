@@ -1,12 +1,10 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System.Security.Permissions;
 
 namespace xpra
 {
     [JsonObject(MemberSerialization.OptIn)]
-    public class Ap : Observable
+    public class Ap : TreeItem
     {
         public int Pid { get; set; }
         public int Pgid { get; set; }
@@ -14,98 +12,77 @@ namespace xpra
         public string Process { get; set; }
         public string Name { get; set; }
         public string Host { get; set; }
-        private DisplayStatus _displayStatus;
-        public DisplayStatus DisplayStatus { 
-            get { return _displayStatus;  }
-            set
-            {
-                if (_displayStatus != value)
-                {
-                    _displayStatus = value;
-                    NotifyPropertyChanged();
-                    //NotifyPropertyChanged("AttachButtonText");
-                    NotifyPropertyChanged("RunButtonText");
-                    NotifyPropertyChanged("RunButtonColor");
-                    NotifyPropertyChanged("ApList");
+        public Display Display { get; set; }
 
-                }
-            }
-        }
-
-        private ApStatus _status;
-        public ApStatus Status { get { return _status; }
-            set 
-            {
-                if (_status != value)
-                {
-                    _status = value;
-
-
-
-                    NotifyPropertyChanged();
-                    NotifyPropertyChanged("StatusText");
-                    NotifyPropertyChanged("RunButtonText");
-                    NotifyPropertyChanged("RunButtonColor");
-                }
-            }
-        }
-        public void UpdateStatus(DisplayStatus dispStatus)
+        
+        public override void StatusChanged()
         {
-            switch (Status)
-            {
-                case ApStatus.RUNNING:
-                    if (dispStatus == DisplayStatus.NOT_USED)
-                        Status = ApStatus.NOT_RUNNING;
-                    else if (dispStatus == DisplayStatus.PAUSED)
-                        Status = ApStatus.BACKGROUND;
-                    break;
-                case ApStatus.BACKGROUND:
-                    if (dispStatus == DisplayStatus.NOT_USED)
-                        Status = ApStatus.NOT_RUNNING;
-                    else if (dispStatus == DisplayStatus.ACTIVE)
-                        Status = ApStatus.RUNNING;
-                    break;
-            }
+            NotifyPropertyChanged("IsWorking");
+            NotifyPropertyChanged("IsEnabled");
+            NotifyPropertyChanged("IconColor");
+            NotifyPropertyChanged("Opacity");
+            NotifyPropertyChanged("StatusText");
+            NotifyPropertyChanged("PlayButtonEnabled");
+            NotifyPropertyChanged("StopButtonEnabled");
 
         }
+        public void UpdateStatus(Status dispStatus)
+        {
+            if (Status == Status.ACTIVE || Status == Status.DETACHED)
+                Status = dispStatus;
+        }
+        public string IconColor
+        {
+            get
+            {
+                if (Status == Status.STOPPED)
+                    return "SlateGray";
+                if (Status == Status.DETACHED)
+                    return "DarkMagenta"; // purple
+                if (Status == Status.ACTIVE)
+                    return "ForestGreen";
+                // unknown 
+                return "DimGray";
 
+            }
+        }
         public string StatusText
         {
             get
             {
-                return _status == ApStatus.RUNNING ? "Running" :
-                    _status == ApStatus.BACKGROUND ? "Background" :
+                return
+                    Status == Status.STARTING ? "Starting..." :
+                    Status == Status.ACTIVE ? "Running" :
+                    Status == Status.DETACHED ? "Background" :
+                    Status == Status.STARTING ? "Starting..." :
+                    Status == Status.ATTACHING ? "Attaching..." :
+                    Status == Status.DETACHING ? "Detaching..." :
+                    Status == Status.STOPPING ? "Closing..." :
                     "";
             }
         }
-        public int DisplayId { get; set; }
+        public int DisplayId { get { return Display.Id;  } }
         
-        public string RunButtonText { 
-            get 
-            {
-                if (Status == ApStatus.NOT_RUNNING)
-                    return "RUN";
-                return "CLOSE";
-            }
-        }
-        public string RunButtonColor
+        public bool PlayButtonEnabled
         {
             get
             {
-                if (Status == ApStatus.NOT_RUNNING)
-                    return "SlateGray"; 
-                if (Status == ApStatus.BACKGROUND)
-                    return "DarkMagenta"; // purple
-                if (Status == ApStatus.RUNNING)
-                    return "ForestGreen";
-                // unknown 
-                return "DimGray";
-               
+                return !IsWorking && Status != Status.CHECKING;
             }
         }
-        public Ap()
+        
+        public bool StopButtonEnabled
         {
-            DisplayStatus = DisplayStatus.NOT_USED;
+            get
+            {
+                return !IsWorking && (Status == Status.ACTIVE || Status == Status.DETACHED);
+            }
+        }
+        public Ap(Display d)
+        {
+            Display = d;
+            //DisplayStatus = xpra.Status.NOT_RUNNING;
+            IsEnabled = true;
         }
         public Ap(Ap d)
         {

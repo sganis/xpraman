@@ -44,52 +44,44 @@ namespace xpra
                     return;
                 var apps = JsonConvert.DeserializeObject<List<object>>(json["apps"].ToString());
 
+                Dictionary<int, Display> displays = new Dictionary<int, Display>();
+
                 foreach (var a in apps)
                 {
                     var ap = JsonConvert.DeserializeObject<Dictionary<string, string>>(a.ToString());
-                    Ap appobj = new Ap
+                    
+                    Connection conn = ConnectionList.Where(x => x.Host == ap["host"]).FirstOrDefault();
+                    if (conn == null)
+                    {
+                        conn = new Connection();
+                        conn.Url = $"ssh://{conn.CurrentUser}@{ap["host"]}:{conn.CurrentPort}";
+                        ConnectionList.Add(conn);
+                    }
+                    
+                    var displayId = int.Parse("0" + ap["display"]);
+                    Display disp = null;
+                    if (!displays.ContainsKey(displayId))
+                    {
+                        disp = new Display(displayId);
+                        disp.Connection = conn; 
+                        displays[displayId] = disp;
+                    }
+                    disp = displays[displayId];
+                    
+                    Ap appobj = new Ap(disp)
                     {
                         Name = ap["name"],
                         Path = ap["path"],
-                        Host = ap["host"],
-                        DisplayId = int.Parse("0" + ap["display"]),
-
+                        Host = ap["host"],                    
                     };
                     if (ap.ContainsKey("process"))
                         appobj.Process = ap["process"];
                     else
                         appobj.Process = ap["path"];
-                    Connection conn = ConnectionList.Where(x => x.Host == appobj.Host).FirstOrDefault();
-                    if (conn == null)
-                    {
-                        conn = new Connection();
-                        conn.Url = $"ssh://{conn.CurrentUser}@{appobj.Host}:{conn.CurrentPort}";
-                        ConnectionList.Add(conn);
-                    }
+                   
+                    appobj.Connection = conn;
                     conn.AddApp(appobj);
 
-                    //Connection connobj = new Connection();
-                    //var conn = JsonConvert.DeserializeObject<Dictionary<string, object>>(c.ToString());
-                    //if (conn.ContainsKey("url"))
-                    //    connobj.Url = conn["url"].ToString();
-                    //if (conn.ContainsKey("nickname"))
-                    //    connobj.Nickname = conn["nickname"].ToString();
-                    //if (!conn.ContainsKey("apps"))
-                    //    return;
-                    //var aps = JsonConvert.DeserializeObject<List<object>>(conn["apps"].ToString());
-                    //foreach (var a in aps)
-                    //{
-                    //    var ap = JsonConvert.DeserializeObject<Dictionary<string, string>>(a.ToString());
-                    //    Ap appobj = new Ap
-                    //    {
-                    //        Name = ap["name"],
-                    //        Path = ap["path"],
-                    //        DisplayId = int.Parse("0"+ ap["display"]),
-                    //    };
-                    //    connobj.AddApp(appobj);
-                        
-                    //}
-                    //ConnectionList.Add(connobj);
                 }                
             }
             catch (Exception ex)

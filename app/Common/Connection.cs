@@ -3,6 +3,7 @@ using Renci.SshNet;
 using Renci.SshNet.Common;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -49,7 +50,7 @@ namespace xpra
         public SshClient Ssh { get; set; }
         
         public string Error { get; set; }
-        public bool Connected { get { return Ssh != null && Ssh.IsConnected; } }
+        public bool IsConnected { get { return Ssh != null && Ssh.IsConnected; } }
         public string UserProfile
         {
             get
@@ -149,7 +150,7 @@ namespace xpra
         }
 
         public string ConnectButtonText => 
-            Connected ? "DISCONNECT" : "CONNECT";
+            IsConnected ? "DISCONNECT" : "CONNECT";
 
         public Connection()
         {
@@ -166,6 +167,7 @@ namespace xpra
             if(d == null)
             {
                 d = new Display(a.DisplayId);
+                d.Connection = this;
                 DisplayList.Add(d);
             }
             d.AddApp(a);
@@ -238,7 +240,7 @@ namespace xpra
         public ReturnBox RunRemote(string cmd, int timeout_secs = 3600)
         {
             ReturnBox r = new ReturnBox();
-            if (Connected)
+            if (IsConnected)
             {
                 try
                 {
@@ -268,12 +270,11 @@ namespace xpra
                 Ssh = new SshClient(Host, CurrentPort, CurrentUser, keyFiles);
                 Ssh.ConnectionInfo.Timeout = TimeSpan.FromSeconds(5);
                 Ssh.Connect();
-
                 rb.Success = true;
                 rb.ConnectStatus = ConnectStatus.OK;
                 rb.Connection = this;
-                //NotifyPropertyChanged("Connected");
-                //NotifyPropertyChanged("ConnectButtonText");
+               
+                UpdateItemStatus();
 
             }
             catch (SshAuthenticationException ex)
@@ -298,9 +299,7 @@ namespace xpra
                 rb.Success = true;
                 rb.ConnectStatus = ConnectStatus.OK;
                 rb.Connection = this;
-                //NotifyPropertyChanged("Connected");
-                //NotifyPropertyChanged("ConnectButtonText");
-
+                UpdateItemStatus();
             }
             catch (Exception ex)
             {
@@ -310,6 +309,14 @@ namespace xpra
             return rb;
         }
 
+        private void UpdateItemStatus()
+        {
+            NotifyPropertyChanged("IsConnected");
+            NotifyPropertyChanged("ConnectButtonText");
+
+            foreach (var d in DisplayList)
+                d.StatusChanged();
+        }
         #region SSH Management
 
         public ReturnBox TestHost()

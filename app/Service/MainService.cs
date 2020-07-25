@@ -116,22 +116,13 @@ namespace xpra
 
         public ReturnBox RunAp(Connection conn, Ap ap, IProgress<string> status)
         {
-            ReturnBox r = new ReturnBox();
-            
-            // run in server
-            if(!conn.Connected)
-            {
-                var msg = "Not connected";
-                r.Error = msg;
-                return r;
-            }
-
+            ap.Status = Status.STARTING;
             status.Report($"Starting {ap.Name}...");
             var cmd = $"export DISPLAY=:{ap.DisplayId}; \"{ap.Path}\" >/dev/null 2>&1 & echo $!";
-            r = conn.RunRemote(cmd);
+            var r = conn.RunRemote(cmd);
             if (r.Success)
             {
-                ap.Status = ApStatus.RUNNING;
+                ap.Status = Status.ACTIVE;
                 status.Report($"{ap.Name} stated.");
             }
             return r;
@@ -143,7 +134,7 @@ namespace xpra
                 var r = conn.RunRemote($"kill -- -{ap.Pgid}");
                 if (r.Success)
                 {
-                    ap.Status = ApStatus.NOT_RUNNING;
+                    ap.Status = Status.STOPPED;
                     status.Report($"{ap.Name} closed.");
                 }
                 return r;
@@ -161,10 +152,14 @@ namespace xpra
         public ReturnBox XpraStart(Connection conn, Display display, IProgress<string> status)
         {
             ReturnBox r = new ReturnBox();
-            
+            display.Status = Status.STARTING;
             var cmd = $"xpra start :{display.Id} {m_settings.XpraServerArgs} ";
             r = conn.RunRemote(cmd);
-            if (!r.Success)
+            if (r.Success)
+            {
+                display.Status = Status.DETACHED;    
+            } 
+            else
             {
                 status.Report($"Xpra start error: {r.Error}");
             }
@@ -174,15 +169,20 @@ namespace xpra
         public ReturnBox XpraStop(Connection conn, Display display, IProgress<string> status)
         {
             ReturnBox r = new ReturnBox();
+            display.Status = Status.STOPPING;
             var cmd = $"xpra stop :{display.Id}";
+            System.Threading.Thread.Sleep(2000);
             r = conn.RunRemote(cmd);
-
+            if (r.Success)
+                display.Status = Status.STOPPED;
             return r;
         }
 
         public ReturnBox XpraAttach(Connection conn, Display display, IProgress<string> status)
         {
+            display.Status = Status.ATTACHING;
             //var opengl = "--opengl";
+            System.Threading.Thread.Sleep(2000);
             var opengl = "";
             var cmd = m_xpra_local;
             var param = 
@@ -190,12 +190,17 @@ namespace xpra
                 "--webcam=no --idle-timeout=0 --cursors=yes --compress=0 " +
                 $"{ opengl }";
             var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}:{conn.CurrentPort}/{display.Id} {param} {m_settings.XpraClientArgs}";
-            return conn.RunLocal(cmd, args, false);
+            var r = conn.RunLocal(cmd, args, false);
+            if (r.Success)
+                display.Status = Status.ACTIVE;
+            return r;
         }
         public ReturnBox Detach(Display display, IProgress<string> status)
         {
+            display.Status = Status.DETACHING;
             var r = new ReturnBox();
             string cmd = "";
+            System.Threading.Thread.Sleep(2000);
             foreach (var p in Process.GetProcesses())
             {
                 if (p.ProcessName.Contains("Xpra"))
@@ -209,6 +214,7 @@ namespace xpra
                     }
                 }
             }
+            display.Status = Status.DETACHED;
             return r;
         }
 
@@ -232,27 +238,34 @@ namespace xpra
             var r = conn.RunRemote($"xpra list |grep -o \"LIVE session at :[0-9]\\+\" | awk '{{print $4}}'");
             var apps = new List<Ap>();
 
+            Dictionary<int, Display> displays = new Dictionary<int, Display>();
+
             foreach (var line in r.Output.Split('\n'))
             {
                 var disp_str = line.Trim();
                 if (String.IsNullOrEmpty(disp_str) || !disp_str.Contains(":"))
                     continue;
-                int disp_int = int.Parse(disp_str.Split(':')[1]);
-                
+                int displayId = int.Parse(disp_str.Split(':')[1]);
+                Display disp = null;
+                if (!displays.ContainsKey(displayId))
+                {
+                    disp = new Display(displayId);
+                    displays[displayId] = disp;
+                }
+                disp = displays[displayId];
                 // get pid,pgid,command
-                r = conn.RunRemote($"ps exo pid,pgid,args |grep \"DISPLAY={disp_str}\" |grep -v grep |awk '{{print $1\",\"$2\",\"$3}}'");
+                r = conn.RunRemote($"ps exo pid,pgid,args |grep \"DISPLAY=:{displayId}\" |grep -v grep |awk '{{print $1\",\"$2\",\"$3}}'");
                 
                 foreach (var pid_path in r.Output.Split('\n'))
                 {
-                    var app = new Ap();
+                    var app = new Ap(disp);
                     var aux = pid_path.Split(',');
                     if (aux.Length < 3)
                         continue;
                     app.Pid = int.Parse(aux[0]);
                     app.Pgid = int.Parse(aux[1]);
-                    app.DisplayId = disp_int;
                     app.Process = aux[2];
-                    app.Status = ApStatus.BACKGROUND;
+                    app.Status = Status.DETACHED;
                     apps.Add(app);
                 }
             }

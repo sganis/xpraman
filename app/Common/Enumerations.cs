@@ -8,20 +8,18 @@
         Settings,
         About,
     }
-    public enum DisplayStatus
+    public enum Status
     {
-        NOT_USED,
-        PAUSED,
+        STOPPED,
+        STARTING,
+        ATTACHING,
         ACTIVE,
-        UNKNOWN,
+        DETACHING,
+        DETACHED,
+        STOPPING,
+        CHECKING,
     }
-    public enum ApStatus
-    {
-        NOT_RUNNING,
-        BACKGROUND,
-        RUNNING,
-        UNKNOWN,
-    }
+   
     public enum ConnectStatus
     {
         OK,

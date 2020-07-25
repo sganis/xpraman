@@ -65,27 +65,6 @@ namespace xpra
             }
         }
 
-        //public bool HasApps
-        //{ 
-        //    get 
-        //    { 
-        //        return ConnectionService.Aps != null && ConnectionService.Aps.Count > 0; 
-        //    }
-        //}
-
-        private ApStatus apStatus;
-        public ApStatus ApStatus
-        {
-            get { return apStatus; }
-            set
-            {
-                apStatus = value;
-                NotifyPropertyChanged();
-                //NotifyPropertyChanged("ConnectButtonText");
-                //NotifyPropertyChanged("ConnectButtonColor");
-            }
-        }
-
         private ConnectStatus _connectStatus;
         public ConnectStatus ConnectStatus
         {
@@ -164,7 +143,7 @@ namespace xpra
                 return;
             if (SelectedConnection == null)
                 return;
-            if (!SelectedConnection.Connected)
+            if (!SelectedConnection.IsConnected)
                 return;
             List<Ap> apsServer = null;
             List<int> displaysLocal = null;
@@ -179,6 +158,9 @@ namespace xpra
             // loop over current connection apps in settings
             foreach (var display in SelectedConnection.DisplayList)
             {
+                if (display.IsWorking)
+                    continue;
+
                 var disp_server = apsServer.Where(x => x.DisplayId == display.Id).FirstOrDefault();
                 var disp_local = displaysLocal.Where(x => x == display.Id).FirstOrDefault();
 
@@ -188,22 +170,22 @@ namespace xpra
                     if (disp_local > 0)
                     {
                         // display is attached, status = running
-                        display.Status = DisplayStatus.ACTIVE;
+                        display.Status = Status.ACTIVE;
                     }
                     else
                     {
-                        display.Status = DisplayStatus.PAUSED; // detached
+                        display.Status = Status.DETACHED; // detached
                     }
                 }
                 else
                 {
-                    display.Status = DisplayStatus.NOT_USED;
+                    display.Status = Status.STOPPED;
                 }
                 // update apss status
                 foreach (var ap in display.ApList)
                 {
-                    if (ap.Name.Contains("Subl"))
-                        ap.ToString();
+                    //if (ap.Name.Contains("Subl"))
+                    //    ap.ToString();
 
                     var ap_server = apsServer.Where(x => x.Process == ap.Process && x.DisplayId == display.Id).FirstOrDefault();
 
@@ -215,23 +197,24 @@ namespace xpra
                         if (disp_local > 0)
                         {
                             // display is attached, status = running
-                            ap.Status = ApStatus.RUNNING;
-                            ap.DisplayStatus = DisplayStatus.ACTIVE;
+                            ap.Status = Status.ACTIVE;
+                            //ap.DisplayStatus = Status.RUNNING;
                         }
                         else
                         {
-                            ap.Status = ApStatus.BACKGROUND;
-                            ap.DisplayStatus = DisplayStatus.PAUSED;
+                            ap.Status = Status.DETACHED;
+                            //ap.DisplayStatus = Status.DETACHED;
                         }
                     }
                     else
                     {
-                        ap.DisplayStatus = DisplayStatus.NOT_USED;
-                        ap.Status = ApStatus.NOT_RUNNING;
+                        //ap.DisplayStatus = Status.NOT_RUNNING;
+                        ap.Status = Status.STOPPED;
                     }
                 }
-                
-                display.IsCheckingStatus = false;
+
+
+
             }
             IsCheckingStatus = false;
             
@@ -257,7 +240,6 @@ namespace xpra
                 Message = "";
                 return;
             }
-            ApStatus = r.ApStatus;
             ConnectStatus = r.ConnectStatus;
             Message = r.Error;
 
@@ -274,8 +256,8 @@ namespace xpra
                     break;
                 case ConnectStatus.OK:
                     CurrentPage = Page.Main;
-                    Message = r.ApStatus.ToString();
-                    NotifyPropertyChanged("HasDrives");
+                    //Message = r.ApStatus.ToString();
+                    //NotifyPropertyChanged("HasDrives");
                     break;
                 default:
                     break;
@@ -370,7 +352,7 @@ namespace xpra
         {
             if (SelectedConnection == null)
                 return;
-            if (SelectedConnection.Connected)
+            if (SelectedConnection.IsConnected)
                 DisconnectAsync();
             else
                 ConnectAsync();
@@ -504,10 +486,10 @@ namespace xpra
             var r = new ReturnBox();
             var status = new Progress<string>(ReportStatus);
 
-            if (!SelectedConnection.Connected)
+            if (!SelectedConnection.IsConnected)
                 SelectedConnection.Connect();
 
-            if (ap.Status != ApStatus.NOT_RUNNING)
+            if (ap.Status != Status.STOPPED)
             {
                 WorkStart($"Closing {ap.Name}...");
                 await Task.Run(() => MainService.CloseAp(SelectedConnection, ap, status));
@@ -515,6 +497,7 @@ namespace xpra
             }
             else
             {
+                ap.Status = Status.STARTING;
                 // check display
                 var disp = SelectedConnection.GetDisplay(ap.DisplayId);
                 if (disp == null)
@@ -522,9 +505,9 @@ namespace xpra
                     r.Error = "Display not available";
                     r.Success = false;
                 }
-                else if (disp.Status == DisplayStatus.NOT_USED)
+                else if (disp.Status == Status.STOPPED)
                 {
-                    WorkStart($"Starting DISPLAY :{disp.Id}...");
+                    WorkStart($"Starting DISPLAY :{disp.Id}...");                   
                     r = await Task.Run(() => MainService.XpraStart(SelectedConnection, disp, status));
                     if(r.Success)
                     {
@@ -532,7 +515,7 @@ namespace xpra
                         r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, disp, status));
                     }
                 }
-                else if (disp.Status == DisplayStatus.PAUSED)
+                else if (disp.Status == Status.DETACHED)
                 {
                     WorkStart($"Attaching DISPLAY :{disp.Id}...");
                     r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, disp, status));
@@ -546,9 +529,14 @@ namespace xpra
                 if (r.Success)
                 {
                     WorkStart($"Running {ap.Name}...");
+                    //ap.Status = Status.STARTING;
                     r = await Task.Run(() => MainService.RunAp(SelectedConnection, ap, status));
-                    if (int.TryParse(r.Output, out int pid))
-                        ap.Pid = pid;
+                    if (r.Success)
+                    {
+                        if (int.TryParse(r.Output, out int pid))
+                            ap.Pid = pid;
+                        ap.Status = Status.ACTIVE;
+                    }
                 }
             }
 
@@ -565,10 +553,9 @@ namespace xpra
                 r.Error = "Display not available";
                 r.Success = false;
             }
-            else if (disp.Status == DisplayStatus.NOT_USED)
+            else if (disp.Status == Status.STOPPED)
             {
                 // start
-                disp.IsCheckingStatus = true;
                 WorkStart($"Starting DISPLAY :{disp.Id}...");
                 r = await Task.Run(() => MainService.XpraStart(SelectedConnection, disp, status));
                 if (r.Success)
@@ -578,10 +565,9 @@ namespace xpra
                     r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, disp, status));
                     if (r.Success)
                     {
-                        disp.Status = DisplayStatus.ACTIVE;
+                        disp.Status = Status.ACTIVE;
                     }
                 }
-                disp.IsCheckingStatus = false;
             }
             else
             {
@@ -600,16 +586,14 @@ namespace xpra
                 r.Error = "Display not available";
                 r.Success = false;
             }
-            else if (disp.Status == DisplayStatus.ACTIVE)
+            else if (disp.Status == Status.ACTIVE)
             {
-                disp.IsCheckingStatus = true;
                 WorkStart($"Detaching DISPLAY :{disp.Id}...");
                 r = await Task.Run(() => MainService.Detach(disp, status));
                 if (r.Success)
                 {
-                    disp.Status = DisplayStatus.PAUSED;
+                    disp.Status = Status.DETACHED;
                 }
-                disp.IsCheckingStatus = false;
             }
             else 
             {
@@ -628,16 +612,14 @@ namespace xpra
                 r.Error = "Display not available";
                 r.Success = false;
             }
-            else if (disp.Status == DisplayStatus.PAUSED)
+            else if (disp.Status == Status.DETACHED)
             {
-                disp.IsCheckingStatus = true;
                 WorkStart($"Resuming DISPLAY :{disp.Id}...");
                 r = await Task.Run(() => MainService.XpraAttach(SelectedConnection, disp, status));
                 if (r.Success)
                 {
-                    disp.Status = DisplayStatus.ACTIVE;
+                    disp.Status = Status.ACTIVE;
                 }
-                disp.IsCheckingStatus = false;
             }
             else
             {
@@ -656,16 +638,14 @@ namespace xpra
                 r.Error = "Display not available";
                 r.Success = false;
             }
-            else if (disp.Status == DisplayStatus.ACTIVE || disp.Status == DisplayStatus.PAUSED)
+            else if (disp.Status == Status.ACTIVE || disp.Status == Status.DETACHED)
             {
-                disp.IsCheckingStatus = true;
                 WorkStart($"Stopping DISPLAY :{disp.Id}...");
                 r = await Task.Run(() => MainService.XpraStop(SelectedConnection, disp, status));
                 if (r.Success)
                 {
-                   disp.Status = DisplayStatus.NOT_USED;
+                   disp.Status = Status.STOPPED;
                 }
-                disp.IsCheckingStatus = false;
             }
             else 
             {

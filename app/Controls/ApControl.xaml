@@ -24,8 +24,8 @@
         <local:DisplayToActionTextConverter x:Key="displayToActionTextConverter" />-->
     </UserControl.Resources>
 
-
-    <Grid IsEnabled="{Binding IsWorking, Converter={local:NegateBoolConverter}}">
+    <!--IsEnabled="{Binding IsWorking, Converter={local:NegateBoolConverter}}"-->
+    <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -58,6 +58,7 @@
                 HorizontalAlignment="Right" />
             <Button Content="CLOSE ALL APPS"
                 DockPanel.Dock="Right"
+                    IsEnabled="{Binding SelectedConnection.IsConnected}"
                 Command="{Binding CloseAllAppsCommand}"
                 Style="{StaticResource MaterialDesignFlatButton}"
                 HorizontalAlignment="Right"/>
@@ -106,8 +107,9 @@
                     <Border  BorderBrush="Gray" 
                              BorderThickness="1" 
                              CornerRadius="4"
+                             IsEnabled="{Binding IsEnabled}"                                 
                              Style="{StaticResource hoverItemStyle}">
-                        <Grid Margin="4" >
+                        <Grid Margin="4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
@@ -117,8 +119,10 @@
                             <materialDesign:PackIcon Kind="AppleAirplay"
                                                      Margin="10"
                                                      Width="30" Height="30" 
+                                                     Opacity="{Binding Opacity}" 
                                                     Foreground="{Binding IconColor}"/>
                             <StackPanel Orientation="Horizontal" 
+                                        Opacity="{Binding Opacity}" 
                                         Grid.Column="1">
                                 <TextBlock Text=":" 
                                            Style="{StaticResource MaterialDesignHeadline6TextBlock}" 
@@ -131,6 +135,7 @@
                             <TextBlock  Grid.Column="2"
                                         Style="{StaticResource MaterialDesignHeadline6TextBlock}" 
                                         Text="{Binding StatusText}" 
+                                        Opacity="{Binding Opacity}" 
                                         Margin="10 15 30 0"/>
                             <StackPanel Orientation="Horizontal" Grid.Column="3">
                                 <Button
@@ -139,8 +144,8 @@
                                         Path=DataContext.StopCommand}" 
                                     CommandParameter="{Binding Id}"
                                     Style="{StaticResource MaterialDesignIconButton}"
-                                    Visibility="{Binding StopButtonEnabled, Converter={local:BoolToVis}}"
-                                    IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
+                                    Visibility="{Binding StopButtonVisible, Converter={local:BoolToVis}}"
+                                    IsEnabled="{Binding StopButtonEnabled}">
                                     <materialDesign:PackIcon Kind="Stop" Width="30" Height="30" Foreground="Red"/>
                                 </Button>
                                 <Button 
@@ -149,8 +154,8 @@
                                         Path=DataContext.PauseCommand}" 
                                     CommandParameter="{Binding Id}"
                                     Style="{StaticResource MaterialDesignIconButton}"                                    
-                                    Visibility="{Binding PauseButtonEnabled, Converter={local:BoolToVis}}"
-                                    IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
+                                    Visibility="{Binding PauseButtonVisible, Converter={local:BoolToVis}}"
+                                    IsEnabled="{Binding PauseButtonEnabled}">
                                     <materialDesign:PackIcon Kind="Pause" Width="30" Height="30" Foreground="Purple"/>
                                 </Button>
                                 <Button 
@@ -159,8 +164,8 @@
                                         Path=DataContext.ResumeCommand}" 
                                     CommandParameter="{Binding Id}"
                                     Style="{StaticResource MaterialDesignIconButton}"                                    
-                                    Visibility="{Binding ResumeButtonEnabled, Converter={local:BoolToVis}}"
-                                    IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
+                                    Visibility="{Binding ResumeButtonVisible, Converter={local:BoolToVis}}"
+                                    IsEnabled="{Binding ResumeButtonEnabled}">
                                     <materialDesign:PackIcon Kind="PlayPause" Width="30" Height="30" Foreground="Green"/>
                                 </Button>
                                 <Button
@@ -169,8 +174,8 @@
                                         Path=DataContext.PlayCommand}" 
                                     CommandParameter="{Binding Id}"                                    
                                     Style="{StaticResource MaterialDesignIconButton}"
-                                    Visibility="{Binding PlayButtonEnabled, Converter={local:BoolToVis}}"
-                                    IsEnabled="{Binding IsCheckingStatus, Converter={local:NegateBoolConverter}}">
+                                    Visibility="{Binding PlayButtonVisible, Converter={local:BoolToVis}}"
+                                    IsEnabled="{Binding PlayButtonEnabled}">
                                     <materialDesign:PackIcon Kind="Play" Width="30" Height="30" Foreground="Green" />
                                 </Button>
                             </StackPanel>
@@ -180,7 +185,7 @@
                 <DataTemplate DataType="{x:Type local:Ap}">
                     <Border CornerRadius="4" 
                             Style="{StaticResource hoverItemStyle}">
-                        <Grid Opacity="0.5">
+                        <Grid >
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
@@ -188,19 +193,48 @@
                             <materialDesign:PackIcon Kind="CogOutline"
                                                      Width="30" Height="30" 
                                                      Margin="10 20 0 0" 
-                                                     Foreground="{Binding RunButtonColor}"/>
+                                                     Opacity="{Binding Opacity}" 
+                                                     Foreground="{Binding IconColor}"/>
                             <StackPanel Margin="10 0 0 0" Grid.Column="1" >
                                 <Grid Margin="0 10 10 0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding Name}"
-                                               VerticalAlignment="Bottom"/>
-                                    <TextBlock Text="{Binding StatusText}"  
-                                               Grid.Column="1" Margin="10 0 40 0" VerticalAlignment="Bottom"/>
-                                    <Button Content="{Binding RunButtonText}"
+                                               Opacity="{Binding Opacity}" 
+                                               VerticalAlignment="Center"
+                                               FontSize="18"/>
+                                    <TextBlock Text="{Binding StatusText}" 
+                                               Opacity="{Binding Opacity}" 
+                                               VerticalAlignment="Center"
+                                               Grid.Column="1" Margin="10 0 40 0" />
+                                    <StackPanel Orientation="Horizontal" Grid.Column="2" Margin="0 0 0 10">
+                                        <Button
+                                            ToolTip="Close Application"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
+                                                Path=DataContext.RunApCommand}" 
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            IsEnabled="{Binding StopButtonEnabled}"
+                                            Margin="0 0 8 0"
+                                            Width="32" Height="32">
+                                            <materialDesign:PackIcon Kind="Stop" Width="28" Height="28" Foreground="Red"/>
+                                        </Button>                                        
+                                        <Button
+                                            ToolTip="Run Application"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
+                                                Path=DataContext.RunApCommand}" 
+                                            CommandParameter="{Binding}"                                 
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            IsEnabled="{Binding PlayButtonEnabled}" 
+                                            Margin="0 0 8 0"
+                                            Width="32" Height="32">
+                                            <materialDesign:PackIcon Kind="Play" Width="28" Height="28" Foreground="Green" />
+                                        </Button>
+                                    </StackPanel>
+                                    <!--<Button Content="{Binding RunButtonText}"
                                             VerticalAlignment="Bottom"
                                             Grid.Column="2" 
                                             Width="80"
@@ -208,12 +242,13 @@
                                             Background="{Binding RunButtonColor }"
                                             BorderBrush="{Binding RunButtonColor }"
                                             Margin="0 4 0 0"    
+                                            IsEnabled="{Binding IsEnabled}"
                                             Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
                                                 Path=DataContext.RunApCommand}" 
                                             CommandParameter="{Binding}" >
-                                    </Button>
+                                    </Button>-->
                                 </Grid>
-                                <Border Margin="0,4,10,0" 
+                                <Border Margin="0,0,10,0" 
                                         BorderThickness="1" 
                                         BorderBrush="{DynamicResource MaterialDesignDivider}"/>
                                 <TextBlock                                     

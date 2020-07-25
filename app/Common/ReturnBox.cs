@@ -5,7 +5,7 @@
         public ReturnBox()
         {
             ConnectStatus = ConnectStatus.UNKNOWN;
-            ApStatus = ApStatus.UNKNOWN;
+            //ApStatus = ApStatus.UNKNOWN;
             Success = false;
             ExitCode = -999;
             Output = "";
@@ -16,7 +16,7 @@
         public int ExitCode { get; set; }
         public bool Success { get; set; }
         public ConnectStatus ConnectStatus { get; set; }
-        public ApStatus ApStatus { get; set; }
+        //public ApStatus ApStatus { get; set; }
         public Connection Connection { get; set; }
     }
 }

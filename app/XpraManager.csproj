@@ -128,6 +128,7 @@
     <Compile Include="Common\Display.cs" />
     <Compile Include="Common\Settings.cs" />
     <Compile Include="Common\StretchingTreeView.cs" />
+    <Compile Include="Common\TreeItem.cs" />
     <Compile Include="Controls\AboutControl.xaml.cs">
       <DependentUpon>AboutControl.xaml</DependentUpon>
     </Compile>
