@@ -163,7 +163,7 @@ namespace xpra
         {
             ApList = new List<Ap>();
             Id = id;
-            IsEnabled = true;
+            //IsEnabled = true;
             Status = Status.CHECKING;
         }
         public void AddApp(Ap a)

@@ -118,7 +118,6 @@ namespace xpra
             var newValue = $@"C:\{XPRA};" + oldValue;
             Environment.SetEnvironmentVariable(name, newValue, scope);
 
-            // Monitor
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
             dispatcherTimer.Tick += dispatcherTimer_Tick;
             dispatcherTimer.Interval = new TimeSpan(0, 0, 5);
@@ -192,7 +191,7 @@ namespace xpra
                     if (ap_server != null)
                     {
                         // ap is running in server, check local
-                        ap.Pgid = ap_server.Pgid;
+                        ap.ProcessGroupIds = ap_server.ProcessGroupIds;
 
                         if (disp_local > 0)
                         {
@@ -486,17 +485,17 @@ namespace xpra
             var r = new ReturnBox();
             var status = new Progress<string>(ReportStatus);
 
-            if (!SelectedConnection.IsConnected)
-                SelectedConnection.Connect();
+            //if (!SelectedConnection.IsConnected)
+            //    SelectedConnection.Connect();
 
-            if (ap.Status != Status.STOPPED)
-            {
-                WorkStart($"Closing {ap.Name}...");
-                await Task.Run(() => MainService.CloseAp(SelectedConnection, ap, status));
-                r.Success = true;
-            }
-            else
-            {
+            //if (ap.Status != Status.STOPPED)
+            //{
+            //    WorkStart($"Closing {ap.Name}...");
+            //    await Task.Run(() => MainService.CloseAp(SelectedConnection, ap, status));
+            //    r.Success = true;
+            //}
+            //else
+            //{
                 ap.Status = Status.STARTING;
                 // check display
                 var disp = SelectedConnection.GetDisplay(ap.DisplayId);
@@ -534,12 +533,29 @@ namespace xpra
                     if (r.Success)
                     {
                         if (int.TryParse(r.Output, out int pid))
-                            ap.Pid = pid;
+                            ap.AddPgid(pid);
                         ap.Status = Status.ACTIVE;
                     }
                 }
-            }
+            //}
 
+            WorkDone(r);
+        }
+        private async void OnCloseApp(Ap ap)
+        {
+            var r = new ReturnBox();
+            var status = new Progress<string>(ReportStatus);
+            WorkStart($"Closing {ap.Name}...");
+            r = await Task.Run(() => MainService.CloseAp(SelectedConnection, ap, status));
+            if (r.Success)
+            {
+
+            }
+            else
+            {
+
+            }
+            ap.ClearPgids();
             WorkDone(r);
         }
         private async void OnPlay(int display)
@@ -877,6 +893,24 @@ namespace xpra
                        x =>
                        {
                            OnRunApp((Ap)x);
+                       },
+                       // can execute
+                       x =>
+                       {
+                           return true;
+                       }));
+            }
+        }
+        private ICommand _closeApCommand;
+        public ICommand CloseApCommand
+        {
+            get
+            {
+                return _closeApCommand ??
+                   (_closeApCommand = new RelayCommand(
+                       x =>
+                       {
+                           OnCloseApp((Ap)x);
                        },
                        // can execute
                        x =>

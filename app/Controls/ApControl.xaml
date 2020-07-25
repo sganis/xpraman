@@ -184,6 +184,7 @@
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type local:Ap}">
                     <Border CornerRadius="4" 
+                             IsEnabled="{Binding IsEnabled}"   
                             Style="{StaticResource hoverItemStyle}">
                         <Grid >
                             <Grid.ColumnDefinitions>
@@ -202,10 +203,17 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Name}"
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Name}"
+                                                Opacity="{Binding Opacity}" 
+                                                VerticalAlignment="Center"
+                                                FontSize="18"/>
+                                        <TextBlock Text="{Binding InstanceCount}"
                                                Opacity="{Binding Opacity}" 
                                                VerticalAlignment="Center"
+                                                   Margin="4 0 0 0"
                                                FontSize="18"/>
+                                    </StackPanel>
                                     <TextBlock Text="{Binding StatusText}" 
                                                Opacity="{Binding Opacity}" 
                                                VerticalAlignment="Center"
@@ -214,14 +222,14 @@
                                         <Button
                                             ToolTip="Close Application"
                                             Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
-                                                Path=DataContext.RunApCommand}" 
+                                                Path=DataContext.CloseApCommand}" 
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource MaterialDesignIconButton}"
                                             IsEnabled="{Binding StopButtonEnabled}"
                                             Margin="0 0 8 0"
                                             Width="32" Height="32">
                                             <materialDesign:PackIcon Kind="Stop" Width="28" Height="28" Foreground="Red"/>
-                                        </Button>                                        
+                                        </Button>
                                         <Button
                                             ToolTip="Run Application"
                                             Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},

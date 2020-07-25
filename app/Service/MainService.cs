@@ -123,15 +123,26 @@ namespace xpra
             if (r.Success)
             {
                 ap.Status = Status.ACTIVE;
+                // fixme, get pgid, not pid
+                var pid = int.Parse(r.Output);
+                //ap.AddPgid(pid);
                 status.Report($"{ap.Name} stated.");
             }
             return r;
         }
         public ReturnBox CloseAp(Connection conn, Ap ap, IProgress<string> status)
         {
-            if (ap.Pgid > 0)
+            if (ap.ProcessGroupIds.Count > 0)
             {
-                var r = conn.RunRemote($"kill -- -{ap.Pgid}");
+
+                ReturnBox r = null;
+                foreach(var pgid in ap.ProcessGroupIds)
+                {
+                    r = conn.RunRemote($"kill -- -{pgid}");
+                    //if (!r.Success)
+                    //    break;
+                    
+                }
                 if (r.Success)
                 {
                     ap.Status = Status.STOPPED;
@@ -236,9 +247,8 @@ namespace xpra
         {
             // get server xpra sessions
             var r = conn.RunRemote($"xpra list |grep -o \"LIVE session at :[0-9]\\+\" | awk '{{print $4}}'");
-            var apps = new List<Ap>();
-
-            Dictionary<int, Display> displays = new Dictionary<int, Display>();
+            var apps = new Dictionary<string, Ap>();
+            var displays = new Dictionary<int, Display>();
 
             foreach (var line in r.Output.Split('\n'))
             {
@@ -258,18 +268,23 @@ namespace xpra
                 
                 foreach (var pid_path in r.Output.Split('\n'))
                 {
-                    var app = new Ap(disp);
                     var aux = pid_path.Split(',');
                     if (aux.Length < 3)
                         continue;
-                    app.Pid = int.Parse(aux[0]);
-                    app.Pgid = int.Parse(aux[1]);
-                    app.Process = aux[2];
+                    var process_path = aux[2];
+                    Ap app = null;
+                    if (!apps.ContainsKey(process_path))
+                    {
+                        app = new Ap(disp);
+                        app.Process = process_path;
+                        apps[process_path] = app;
+                    }
+                    app = apps[process_path];
+                    app.AddPgid(int.Parse(aux[1]));
                     app.Status = Status.DETACHED;
-                    apps.Add(app);
                 }
             }
-            return apps;
+            return apps.Values.ToList();
         }
         public List<int> GetDisplaysLocal()
         {

@@ -5,19 +5,19 @@ namespace xpra
     {
         public Connection Connection { get; set; }
 
-        private bool _isEnabled;
+        //private bool _isEnabled;
         public bool IsEnabled
         {
-            get { return _isEnabled && Connection != null && Connection.IsConnected; }
-            set
-            {
-                if (_isEnabled != value)
-                {
-                    _isEnabled = value;
-                    NotifyPropertyChanged();
-                    NotifyPropertyChanged("Opacity");
-                }
-            }
+            get { return Connection != null && Connection.IsConnected; }
+            //set
+            //{
+            //    if (_isEnabled != value)
+            //    {
+            //        _isEnabled = value;
+            //        NotifyPropertyChanged();
+            //        NotifyPropertyChanged("Opacity");
+            //    }
+            //}
         }
         public string Opacity
         {
