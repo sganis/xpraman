@@ -123,22 +123,19 @@ namespace xpra
             if (r.Success)
             {
                 ap.Status = Status.ACTIVE;
-                // fixme, get pgid, not pid
-                var pid = int.Parse(r.Output);
-                //ap.AddPgid(pid);
                 status.Report($"{ap.Name} stated.");
             }
             return r;
         }
         public ReturnBox CloseAp(Connection conn, Ap ap, IProgress<string> status)
         {
-            if (ap.ProcessGroupIds.Count > 0)
+            if (ap.InstanceList.Count > 0)
             {
 
                 ReturnBox r = null;
-                foreach(var pgid in ap.ProcessGroupIds)
+                foreach(var i in ap.InstanceList)
                 {
-                    r = conn.RunRemote($"kill -- -{pgid}");
+                    r = conn.RunRemote($"kill -- -{i.Pgid}");
                     //if (!r.Success)
                     //    break;
                     
@@ -264,7 +261,8 @@ namespace xpra
                 }
                 disp = displays[displayId];
                 // get pid,pgid,command
-                r = conn.RunRemote($"ps exo pid,pgid,args |grep \"DISPLAY=:{displayId}\" |grep -v grep |awk '{{print $1\",\"$2\",\"$3}}'");
+                var cmd = $"ps exo pid,pgid,args |grep \"DISPLAY=:{displayId}\" |grep -v grep |awk '{{print $1\",\"$2\",\"$3}}'";
+                r = conn.RunRemote(cmd);
                 
                 foreach (var pid_path in r.Output.Split('\n'))
                 {
@@ -280,7 +278,7 @@ namespace xpra
                         apps[process_path] = app;
                     }
                     app = apps[process_path];
-                    app.AddPgid(int.Parse(aux[1]));
+                    app.AddInstance(aux[1], aux[0], process_path);
                     app.Status = Status.DETACHED;
                 }
             }

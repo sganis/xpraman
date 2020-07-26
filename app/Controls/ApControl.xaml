@@ -182,7 +182,8 @@
                         </Grid>
                     </Border>
                 </HierarchicalDataTemplate>
-                <DataTemplate DataType="{x:Type local:Ap}">
+                <HierarchicalDataTemplate DataType="{x:Type local:Ap}" ItemsSource="{Binding InstanceList}">
+                    <!--<DataTemplate DataType="{x:Type local:Ap}">-->
                     <Border CornerRadius="4" 
                              IsEnabled="{Binding IsEnabled}"   
                             Style="{StaticResource hoverItemStyle}">
@@ -191,7 +192,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <materialDesign:PackIcon Kind="CogOutline"
+                            <materialDesign:PackIcon Kind="FolderCogOutline"
                                                      Width="30" Height="30" 
                                                      Margin="10 20 0 0" 
                                                      Opacity="{Binding Opacity}" 
@@ -208,7 +209,7 @@
                                                 Opacity="{Binding Opacity}" 
                                                 VerticalAlignment="Center"
                                                 FontSize="18"/>
-                                        <TextBlock Text="{Binding InstanceCount}"
+                                        <TextBlock Text="{Binding InstancesText}"
                                                Opacity="{Binding Opacity}" 
                                                VerticalAlignment="Center"
                                                    Margin="4 0 0 0"
@@ -242,19 +243,6 @@
                                             <materialDesign:PackIcon Kind="Play" Width="28" Height="28" Foreground="Green" />
                                         </Button>
                                     </StackPanel>
-                                    <!--<Button Content="{Binding RunButtonText}"
-                                            VerticalAlignment="Bottom"
-                                            Grid.Column="2" 
-                                            Width="80"
-                                            Height="30"
-                                            Background="{Binding RunButtonColor }"
-                                            BorderBrush="{Binding RunButtonColor }"
-                                            Margin="0 4 0 0"    
-                                            IsEnabled="{Binding IsEnabled}"
-                                            Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeView}},
-                                                Path=DataContext.RunApCommand}" 
-                                            CommandParameter="{Binding}" >
-                                    </Button>-->
                                 </Grid>
                                 <Border Margin="0,0,10,0" 
                                         BorderThickness="1" 
@@ -266,6 +254,18 @@
                             </StackPanel>
                         </Grid>
                     </Border>
+                    <!--</DataTemplate>-->
+                </HierarchicalDataTemplate>
+                <DataTemplate DataType="{x:Type local:Instance}">
+                    <StackPanel Orientation="Horizontal" Margin="20 0 0 0">
+                        <materialDesign:PackIcon Kind="CogOutline"
+                                                     Width="20" Height="20" 
+                                                     Margin="4" 
+                                                     Opacity="{Binding Opacity}" 
+                                                     Foreground="Gray"/>
+                        <TextBlock Text="{Binding Pgid}" Opacity="{Binding Opacity}" VerticalAlignment="Center"/>
+                        <TextBlock Text=" " Opacity="{Binding Opacity}" VerticalAlignment="Center"/>
+                    </StackPanel>
                 </DataTemplate>
                 <!--<SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Opacity=".2" Color="{x:Static SystemColors.HotTrackColor}" />-->
                 <!--<SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="#c2dfec" />-->

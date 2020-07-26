@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Security.Permissions;
 
 namespace xpra
@@ -7,35 +9,34 @@ namespace xpra
     [JsonObject(MemberSerialization.OptIn)]
     public class Ap : TreeItem
     {
-        //public int Pid { get; set; }
-        //public int Pgid { get; set; }
         public string Path { get; set; }
         public string Process { get; set; }
         public string Name { get; set; }
         public string Host { get; set; }
+        
         public Display Display { get; set; }
-        private List<int> _pgids;
-        public List<int> ProcessGroupIds
-        {
-            get { return _pgids; }
-            set
-            {
-                if (_pgids != value)
-                {
-                    _pgids = value;
-                    NotifyPropertyChanged();
-                    NotifyPropertyChanged("InstanceCount");
-                }
-            }
-        }
-        public string InstanceCount
+
+        public string InstancesText
         {
             get
             {
-                return ProcessGroupIds.Count > 1 ? $"({ ProcessGroupIds.Count })" : "";
+                return InstanceList.Count > 1 ? $"({ InstanceList.Count })" : "";
             }
         }
-
+        public ObservableCollection<Instance> _instances;
+        public ObservableCollection<Instance> InstanceList
+        {
+            get { return _instances; }
+            set
+            {
+                if (_instances != value)
+                {
+                    _instances = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged("InstancesText");
+                }
+            }
+        }
         public override void StatusChanged()
         {
             NotifyPropertyChanged("IsWorking");
@@ -45,7 +46,8 @@ namespace xpra
             NotifyPropertyChanged("StatusText");
             NotifyPropertyChanged("PlayButtonEnabled");
             NotifyPropertyChanged("StopButtonEnabled");
-            NotifyPropertyChanged("InstanceCount");
+            NotifyPropertyChanged("InstanceList");
+            NotifyPropertyChanged("InstancesText");
         }
         public void UpdateStatus(Status dispStatus)
         {
@@ -89,7 +91,7 @@ namespace xpra
         {
             get
             {
-                return !IsWorking && Status != Status.CHECKING;
+                return !IsWorking && Status != Status.UNKNOWN;
             }
         }
         
@@ -103,8 +105,8 @@ namespace xpra
         public Ap(Display d)
         {
             Display = d;
-            //IsEnabled = true;
-            _pgids = new List<int>();
+            Status = Status.UNKNOWN;
+            _instances = new ObservableCollection<Instance>();
         }
         public Ap(Ap d)
         {
@@ -116,15 +118,36 @@ namespace xpra
             if (d == null)
                 return;
         }
-        public void AddPgid(int p)
+        public void AddInstance(string pgid, string pid, string process=null)
         {
-            ProcessGroupIds.Add(p);
-            NotifyPropertyChanged("InstanceCount");
+            Instance i = InstanceList.Where(x => x.Pgid == pgid).FirstOrDefault();
+            if (i == null)
+            {
+                i = InstanceList.Where(x => x.Pid == pid).FirstOrDefault();
+                if (i == null)
+                {
+                    i = new Instance(pgid);
+                    if (pid != null)
+                        i.Pid = pid;
+                    if (process != null)
+                        i.Process = process;
+
+                    InstanceList.Add(i);
+                    NotifyPropertyChanged("InstancesText");
+                }
+                else
+                {
+                    i.Pgid = pgid;
+                    i.Process = process;                    
+                }
+            }
+            i.IsUpdated = true;
         }
-        public void ClearPgids()
+        public void ClearInstances()
         {
-            _pgids.Clear();
-            NotifyPropertyChanged("InstanceCount");
+            _instances.Clear();
+            NotifyPropertyChanged("InstanceList");
+            NotifyPropertyChanged("InstancesText");
         }
 
     }

@@ -77,7 +77,7 @@ namespace xpra
                 return Status == Status.STOPPED 
                     || Status == Status.STARTING 
                     || Status == Status.STOPPING 
-                    || Status == Status.CHECKING;
+                    || Status == Status.UNKNOWN;
             }
         }
         public bool PauseButtonVisible
@@ -106,7 +106,7 @@ namespace xpra
         {
             get
             {
-                return !IsWorking && Status != Status.CHECKING;
+                return !IsWorking && Status != Status.UNKNOWN;
             }
         }
         public bool PauseButtonEnabled
@@ -163,8 +163,7 @@ namespace xpra
         {
             ApList = new List<Ap>();
             Id = id;
-            //IsEnabled = true;
-            Status = Status.CHECKING;
+            Status = Status.UNKNOWN;
         }
         public void AddApp(Ap a)
         {

@@ -17,7 +17,7 @@
         DETACHING,
         DETACHED,
         STOPPING,
-        CHECKING,
+        UNKNOWN,
     }
    
     public enum ConnectStatus

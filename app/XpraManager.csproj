@@ -118,6 +118,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="Common\Connection.cs" />
+    <Compile Include="Common\Instance.cs" />
     <Compile Include="Common\IRequestFocus.cs" />
     <Compile Include="Common\ProcCmdLine.cs" />
     <Compile Include="Common\RelayCommand.cs" />
