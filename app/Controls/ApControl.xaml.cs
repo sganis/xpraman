@@ -20,5 +20,14 @@ namespace xpra
             
         }
 
+        private void TreeView_Collapsed(object sender, RoutedEventArgs e)
+        {
+            ((TreeItem)((TreeViewItem)e.OriginalSource).DataContext).IsExpanded = false;
+        }
+
+        private void TreeView_Expanded(object sender, RoutedEventArgs e)
+        {
+            ((TreeItem)((TreeViewItem)e.OriginalSource).DataContext).IsExpanded = true;
+        }
     }
 }

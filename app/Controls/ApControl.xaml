@@ -71,6 +71,9 @@
                                   HorizontalContentAlignment="Stretch"
                                   ScrollViewer.VerticalScrollBarVisibility="Visible"
                                   BorderBrush="Transparent"
+                                  TreeViewItem.Collapsed="TreeView_Collapsed"   
+                                  TreeViewItem.Expanded="TreeView_Expanded"
+                                  
                                   Background="{DynamicResource MaterialDesignPaper}"
                                   ItemsSource="{Binding SelectedConnection.DisplayList}">
 
@@ -103,7 +106,9 @@
                     </Style.Triggers>
                 
                 </Style>
-                <HierarchicalDataTemplate DataType="{x:Type local:Display}" ItemsSource="{Binding ApList}">
+                <HierarchicalDataTemplate DataType="{x:Type local:Display}" 
+                                          ItemsSource="{Binding ApList}"
+                                          >
                     <Border  BorderBrush="Gray" 
                              BorderThickness="1" 
                              CornerRadius="4"
@@ -194,11 +199,11 @@
                             </Grid.ColumnDefinitions>
                             <materialDesign:PackIcon Kind="FolderCogOutline"
                                                      Width="30" Height="30" 
-                                                     Margin="10 20 0 0" 
+                                                     Margin="10 10 0 0" 
                                                      Opacity="{Binding Opacity}" 
                                                      Foreground="{Binding IconColor}"/>
                             <StackPanel Margin="10 0 0 0" Grid.Column="1" >
-                                <Grid Margin="0 10 10 0">
+                                <Grid Margin="0 5 10 0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
@@ -209,7 +214,7 @@
                                                 Opacity="{Binding Opacity}" 
                                                 VerticalAlignment="Center"
                                                 FontSize="18"/>
-                                        <TextBlock Text="{Binding InstancesText}"
+                                        <TextBlock Text="{Binding InstanceCountText}"
                                                Opacity="{Binding Opacity}" 
                                                VerticalAlignment="Center"
                                                    Margin="4 0 0 0"
@@ -280,9 +285,10 @@
             </local:StretchingTreeView.Resources>
             <local:StretchingTreeView.ItemContainerStyle>
                 <Style TargetType="local:StretchingTreeViewItem">
-                    <Setter Property="IsExpanded" Value="True" />
-                    <Setter Property="Margin" Value="10 10 0 0" />
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
+                    <Setter Property="Margin" Value="5 5 0 0" />
                     <Setter Property="Padding" Value="0" />
+                    
                     <!--<Setter Property="BorderThickness" Value="1"/>-->
                     <!--<Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">

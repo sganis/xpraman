@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Windows.Data;
 using System.ComponentModel;
+using Newtonsoft.Json;
 
 namespace xpra
 {
@@ -201,7 +202,7 @@ namespace xpra
                         
 
                         foreach (var i in ap.InstanceList.Where(x => !x.IsUpdated).ToList())
-                            ap.InstanceList.Remove(i);
+                            ap.RemoveInstance(i);
 
 
 
@@ -490,6 +491,24 @@ namespace xpra
             //    //settings.AddApps(Aps.ToList());
             //    //ConnectionService.SaveSettings(settings);
             //}
+
+            // Save expanded property
+            Dictionary<string, bool> expanded = new Dictionary<string, bool>();
+            foreach (var conn in this.ConnectionList) {
+                foreach (var display in conn.DisplayList)
+                {
+                    expanded[display.ItemId()] = display.IsExpanded;
+                    foreach (var ap in display.ApList)
+                    {
+                        expanded[ap.ItemId()] = ap.IsExpanded;
+
+                    }
+                }
+            }
+            var json = JsonConvert.SerializeObject(expanded);
+            Properties.Settings.Default.Expanded = json;
+            Properties.Settings.Default.Save();
+
         }
 
         private async void OnRunApp(Ap ap)

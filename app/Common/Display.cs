@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Renci.SshNet;
+using System.Collections.Generic;
 
 namespace xpra
 {
@@ -43,6 +44,11 @@ namespace xpra
 
 
         }
+        public override string ItemId()
+        {
+            return $"{Connection.Url}-{Id}";
+        }
+
         private int  _id;
         public int Id
         {

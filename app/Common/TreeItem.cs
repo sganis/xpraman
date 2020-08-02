@@ -1,23 +1,28 @@
 ﻿
+using System.Diagnostics.Eventing.Reader;
+
 namespace xpra
 {
     public abstract class TreeItem : Observable
     {
         public Connection Connection { get; set; }
 
-        //private bool _isEnabled;
         public bool IsEnabled
         {
             get { return Connection != null && Connection.IsConnected; }
-            //set
-            //{
-            //    if (_isEnabled != value)
-            //    {
-            //        _isEnabled = value;
-            //        NotifyPropertyChanged();
-            //        NotifyPropertyChanged("Opacity");
-            //    }
-            //}
+        }
+        private bool _isExpanded;
+        public bool IsExpanded
+        {
+            get { return _isExpanded; }
+            set
+            {
+                if (_isExpanded != value)
+                {
+                    _isExpanded = value;
+                    NotifyPropertyChanged();
+                }
+            }
         }
         public string Opacity
         {
@@ -52,6 +57,9 @@ namespace xpra
         {
 
         }
-
+        public virtual string ItemId()
+        {
+            return "n/a";
+        }
     }
 }

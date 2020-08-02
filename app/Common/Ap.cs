@@ -16,7 +16,7 @@ namespace xpra
         
         public Display Display { get; set; }
 
-        public string InstancesText
+        public string InstanceCountText
         {
             get
             {
@@ -33,7 +33,7 @@ namespace xpra
                 {
                     _instances = value;
                     NotifyPropertyChanged();
-                    NotifyPropertyChanged("InstancesText");
+                    NotifyPropertyChanged("InstanceCountText");
                 }
             }
         }
@@ -47,7 +47,11 @@ namespace xpra
             NotifyPropertyChanged("PlayButtonEnabled");
             NotifyPropertyChanged("StopButtonEnabled");
             NotifyPropertyChanged("InstanceList");
-            NotifyPropertyChanged("InstancesText");
+            NotifyPropertyChanged("InstanceCountText");
+        }
+        public override string ItemId()
+        {
+            return $"{Display.ItemId()}-{Name}";
         }
         public void UpdateStatus(Status dispStatus)
         {
@@ -133,7 +137,8 @@ namespace xpra
                         i.Process = process;
 
                     InstanceList.Add(i);
-                    NotifyPropertyChanged("InstancesText");
+                    NotifyPropertyChanged("InstanceList");
+                    NotifyPropertyChanged("InstanceCountText");
                 }
                 else
                 {
@@ -143,11 +148,18 @@ namespace xpra
             }
             i.IsUpdated = true;
         }
+        public void RemoveInstance(Instance i)
+        {
+            _instances.Remove(i);
+            NotifyPropertyChanged("InstanceList");
+            NotifyPropertyChanged("InstanceCountText");
+        }
+
         public void ClearInstances()
         {
             _instances.Clear();
             NotifyPropertyChanged("InstanceList");
-            NotifyPropertyChanged("InstancesText");
+            NotifyPropertyChanged("InstanceCountText");
         }
 
     }

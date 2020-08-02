@@ -30,6 +30,7 @@ namespace xpra
 
             try
             {
+                // parse config.json
                 var json = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(Filename));
                 
                 // todo: escape and remove semicolon to avoid command injection
@@ -82,7 +83,27 @@ namespace xpra
                     appobj.Connection = conn;
                     conn.AddApp(appobj);
 
-                }                
+                }
+
+                // get expanded property form settings
+                if (!String.IsNullOrEmpty(Properties.Settings.Default.Expanded))
+                {
+                    var expanded = JsonConvert.DeserializeObject<Dictionary<string, bool>>(Properties.Settings.Default.Expanded);
+                    foreach (var conn in this.ConnectionList)
+                    {
+                        foreach (var display in conn.DisplayList)
+                        {
+                            if (expanded.ContainsKey(display.ItemId()))
+                                display.IsExpanded = expanded[display.ItemId()];
+                            foreach (var ap in display.ApList)
+                            {
+                                if (expanded.ContainsKey(ap.ItemId()))
+                                    ap.IsExpanded = expanded[ap.ItemId()];
+
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
