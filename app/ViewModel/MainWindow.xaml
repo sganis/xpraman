@@ -14,7 +14,7 @@
     MinWidth="450"
     MinHeight="600"
     Width="800"
-    Height="800"
+    Height="900"
     Icon="/xpra-manager;component/xpra.ico" 
     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
     TextOptions.TextFormattingMode="Ideal"

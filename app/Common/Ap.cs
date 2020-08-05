@@ -51,11 +51,11 @@ namespace xpra
         }
         public override string ItemId()
         {
-            return $"{Display.ItemId()}-{Name}";
+            return $"{Display.ItemId()}/{Name}";
         }
         public void UpdateStatus(Status dispStatus)
         {
-            if (Status == Status.ACTIVE || Status == Status.DETACHED)
+            if (Status != Status.STOPPED)
                 Status = dispStatus;
         }
         public string IconColor

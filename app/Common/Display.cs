@@ -46,7 +46,7 @@ namespace xpra
         }
         public override string ItemId()
         {
-            return $"{Connection.Url}-{Id}";
+            return $"{Connection.Url}/{Id}";
         }
 
         private int  _id;

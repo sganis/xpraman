@@ -344,7 +344,8 @@ namespace xpra
         {
             foreach (var display in conn.DisplayList)
             {
-                XpraStop(conn, display, status);
+                if (display.Status != Status.STOPPED)
+                    XpraStop(conn, display, status);
             }
         }
         public ReturnBox ConnectPassword(Connection conn, string password, IProgress<string> status)
