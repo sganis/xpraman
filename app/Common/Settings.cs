@@ -45,35 +45,37 @@ namespace xpra
                     return;
                 var apps = JsonConvert.DeserializeObject<List<object>>(json["apps"].ToString());
 
-                Dictionary<int, Display> displays = new Dictionary<int, Display>();
+                var displays = new Dictionary<string, Display>();
 
                 foreach (var a in apps)
                 {
                     var ap = JsonConvert.DeserializeObject<Dictionary<string, string>>(a.ToString());
                     
-                    Connection conn = ConnectionList.Where(x => x.Host == ap["host"]).FirstOrDefault();
+                    Connection conn = ConnectionList.Where(x => x.Url == ap["url"]).FirstOrDefault();
                     if (conn == null)
                     {
                         conn = new Connection();
-                        conn.Url = $"ssh://{conn.CurrentUser}@{ap["host"]}:{conn.CurrentPort}";
+                        conn.Url = ap["url"];
                         ConnectionList.Add(conn);
                     }
                     
-                    var displayId = int.Parse("0" + ap["display"]);
+                    var display = ap["display"];
+                    var displayId = $"{conn.Uid}{display}";
                     Display disp = null;
-                    if (!displays.ContainsKey(displayId))
+                    var dispkey = $"{conn.Url}/{display}";
+                    if (!displays.ContainsKey(dispkey))
                     {
                         disp = new Display(displayId);
                         disp.Connection = conn; 
-                        displays[displayId] = disp;
+                        displays[dispkey] = disp;
+                        conn.AddDisplay(disp);
                     }
-                    disp = displays[displayId];
+                    disp = displays[dispkey];
                     
                     Ap appobj = new Ap(disp)
                     {
                         Name = ap["name"],
-                        Path = ap["path"],
-                        Host = ap["host"],                    
+                        Path = ap["path"],                   
                     };
                     if (ap.ContainsKey("process"))
                         appobj.Process = ap["process"];
@@ -81,7 +83,7 @@ namespace xpra
                         appobj.Process = ap["path"];
                    
                     appobj.Connection = conn;
-                    conn.AddApp(appobj);
+                    disp.AddApp(appobj);
 
                 }
 

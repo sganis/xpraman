@@ -1,21 +1,14 @@
 ﻿#pragma warning disable CS0168
-using Microsoft.Win32;
 using Newtonsoft.Json;
-using Renci.SshNet;
-using Renci.SshNet.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 using System.Reflection;
-using System.ServiceProcess;
 using System.Text.RegularExpressions;
-using System.Windows.Controls;
 
 namespace xpra
 {
@@ -27,6 +20,7 @@ namespace xpra
         string m_xpra_local;
 
         Settings m_settings;
+        ShellType m_shell = ShellType.CSH;
 
         public ObservableCollection<Connection> ConnectionList { get; set; } = new ObservableCollection<Connection>();
         public Connection SelectedConnection { get; set; } = new Connection();
@@ -118,7 +112,8 @@ namespace xpra
         {
             ap.Status = Status.STARTING;
             status.Report($"Starting {ap.Name}...");
-            var cmd = $"export DISPLAY=:{ap.DisplayId}; \"{ap.Path}\" >/dev/null 2>&1 & echo $!";
+            var export = m_shell == ShellType.BASH ? "export DISPLAY=" : "setenv DISPLAY ";
+            var cmd = $"{export}:{ap.DisplayId}; \"{ap.Path}\" >/dev/null 2>&1 & echo $!";
             var r = conn.RunRemote(cmd);
             if (r.Success)
             {
@@ -179,25 +174,16 @@ namespace xpra
             ReturnBox r = new ReturnBox();
             display.Status = Status.STOPPING;
             var cmd = $"xpra stop :{display.Id}";
-            System.Threading.Thread.Sleep(2000);
             r = conn.RunRemote(cmd);
-            if (r.Success)
-                display.Status = Status.STOPPED;
+            display.Status = Status.STOPPED;
             return r;
         }
 
         public ReturnBox XpraAttach(Connection conn, Display display, IProgress<string> status)
         {
             display.Status = Status.ATTACHING;
-            //var opengl = "--opengl";
-            System.Threading.Thread.Sleep(2000);
-            var opengl = "";
             var cmd = m_xpra_local;
-            var param = 
-                "--microphone=off --speaker=off --tray=no " +
-                "--webcam=no --idle-timeout=0 --cursors=yes --compress=0 " +
-                $"{ opengl }";
-            var args = $"attach ssh://{conn.CurrentUser}@{conn.Host}:{conn.CurrentPort}/{display.Id} {param} {m_settings.XpraClientArgs}";
+            var args = $"attach {conn.Url}/{display.Id} {m_settings.XpraClientArgs}";
             var r = conn.RunLocal(cmd, args, false);
             if (r.Success)
                 display.Status = Status.ACTIVE;
@@ -243,16 +229,16 @@ namespace xpra
         public List<Ap> GetApsServer(Connection conn)
         {
             // get server xpra sessions
-            var r = conn.RunRemote($"xpra list |grep -o \"LIVE session at :[0-9]\\+\" | awk '{{print $4}}'");
+            var r = conn.RunRemote($"xpra list |grep -o \"LIVE session at :[0-9]\\+\" | awk '{{print $4}}'", 10);
             var apps = new Dictionary<string, Ap>();
-            var displays = new Dictionary<int, Display>();
+            var displays = new Dictionary<string, Display>();
 
             foreach (var line in r.Output.Split('\n'))
             {
                 var disp_str = line.Trim();
                 if (String.IsNullOrEmpty(disp_str) || !disp_str.Contains(":"))
                     continue;
-                int displayId = int.Parse(disp_str.Split(':')[1]);
+                var displayId = disp_str.Split(':')[1];
                 Display disp = null;
                 if (!displays.ContainsKey(displayId))
                 {
@@ -262,7 +248,7 @@ namespace xpra
                 disp = displays[displayId];
                 // get pid,pgid,command
                 var cmd = $"ps exo pid,pgid,args |grep \"DISPLAY=:{displayId}\" |grep -v grep |awk '{{print $1\",\"$2\",\"$3}}'";
-                r = conn.RunRemote(cmd);
+                r = conn.RunRemote(cmd, 10);
                 
                 foreach (var pid_path in r.Output.Split('\n'))
                 {
@@ -271,22 +257,23 @@ namespace xpra
                         continue;
                     var process_path = aux[2];
                     Ap app = null;
-                    if (!apps.ContainsKey(process_path))
+                    var apkey = $"{process_path}/{displayId}";
+                    if (!apps.ContainsKey(apkey))
                     {
                         app = new Ap(disp);
                         app.Process = process_path;
-                        apps[process_path] = app;
+                        apps[apkey] = app;
                     }
-                    app = apps[process_path];
+                    app = apps[apkey];
                     app.AddInstance(aux[1], aux[0], process_path);
                     app.Status = Status.DETACHED;
                 }
             }
             return apps.Values.ToList();
         }
-        public List<int> GetDisplaysLocal()
+        public List<string> GetDisplaysLocal()
         {
-            var displays = new List<int>();
+            var displays = new List<string>();
             foreach (var p in Process.GetProcesses())
             {
                 if (p.ProcessName.Contains("Xpra"))
@@ -295,7 +282,7 @@ namespace xpra
                     var m = Regex.Match(cmdline, $@"attach .*ssh://.+/([0-9]+)");
                     if (m.Success)
                     {
-                        displays.Add(int.Parse(m.Groups[1].Value));
+                        displays.Add(m.Groups[1].Value);
                     }
                 }
             }
@@ -326,8 +313,21 @@ namespace xpra
             r = conn.TestSsh();
             if (r.ConnectStatus != ConnectStatus.OK)
                 return r;
-            return conn.Connect();
-            
+            r = conn.Connect();
+            if (r.Success)
+            {
+                foreach (var line in conn.RunRemote("env").Output.Split('\n'))
+                {
+                    if (line.StartsWith("SHELL"))
+                    {
+                        m_shell = line.Split('=')[1] == "/bin/bash" ? ShellType.BASH : ShellType.CSH;
+                        break;
+                    }
+                }
+                conn.Uid = conn.RunRemote("id -u").Output.Trim();
+                
+            }
+            return r;
         }
 
         public ReturnBox Disconnect(Connection conn, IProgress<string> status)

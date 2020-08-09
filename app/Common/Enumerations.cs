@@ -29,4 +29,9 @@
         BAD_SSH,
         UNKNOWN,
     }
+    public enum ShellType
+    {
+        CSH,
+        BASH
+    }
 }

@@ -19,6 +19,22 @@ namespace xpra
     {
         const int TIMEOUT = 20; // secs
 
+        private string _uid;
+        public string Uid
+        {
+            get { return _uid; }
+            set
+            {
+                if (_uid != value)
+                {
+                    _uid = value;
+                    foreach (var disp in DisplayList)
+                        disp.Id = $"{_uid}{disp.Id}";
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         string _url;
         public string Url
         {
@@ -156,31 +172,14 @@ namespace xpra
         {
             DisplayList = new List<Display>();
         }
-        public Display GetDisplay(int id)
+        public Display GetDisplay(string id)
         {
             return DisplayList.Where(x => x.Id == id).FirstOrDefault();
         }
-        public void AddApp(Ap a)
+        public void AddDisplay(Display d)
         {
-
-            Display d = DisplayList.Where(x => x.Id == a.DisplayId).FirstOrDefault();
-            if(d == null)
-            {
-                d = new Display(a.DisplayId);
-                d.Connection = this;
-                DisplayList.Add(d);
-            }
-            d.AddApp(a);
+            DisplayList.Add(d);            
         }
-        public Ap GetApp(Ap ap)
-        {
-            return null;
-            //return ApList.Where(x => x.Path == apppath).FirstOrDefault();
-        }
-        //public Ap GetAppByDisplay(int display)
-        //{
-        //    return ApList.Where(x => x.Display == display).FirstOrDefault();
-        //}
         public int ApCount()
         {
             int total = 0;
@@ -273,7 +272,7 @@ namespace xpra
                 rb.Success = true;
                 rb.ConnectStatus = ConnectStatus.OK;
                 rb.Connection = this;
-               
+                
                 UpdateItemStatus();
 
             }

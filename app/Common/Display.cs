@@ -49,8 +49,8 @@ namespace xpra
             return $"{Connection.Url}/{Id}";
         }
 
-        private int  _id;
-        public int Id
+        private string  _id;
+        public string Id
         {
             get { return _id; }
             set
@@ -58,7 +58,8 @@ namespace xpra
                 if (_id != value)
                 {
                     _id = value;
-                    NotifyPropertyChanged();                    
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged("DisplayId");
                 }
             }
         }
@@ -165,7 +166,7 @@ namespace xpra
                     "";
             }
         }
-        public Display(int id)
+        public Display(string id)
         {
             ApList = new List<Ap>();
             Id = id;

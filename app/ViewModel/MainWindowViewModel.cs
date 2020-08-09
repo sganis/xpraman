@@ -146,7 +146,7 @@ namespace xpra
             if (!SelectedConnection.IsConnected)
                 return;
             List<Ap> apsServer = null;
-            List<int> displaysLocal = null;
+            List<string> displaysLocal = null;
 
             IsCheckingStatus = true;
             await Task.Run(() =>
@@ -161,13 +161,14 @@ namespace xpra
                 if (display.IsWorking)
                     continue;
 
-                var disp_server = apsServer.Where(x => x.DisplayId == display.Id).FirstOrDefault();
+                var disp_server = apsServer.Where(x => x.DisplayId.EndsWith(display.Id)).FirstOrDefault();
                 var disp_local = displaysLocal.Where(x => x == display.Id).FirstOrDefault();
 
                 // update display status
                 if (disp_server != null)
                 {
-                    if (disp_local > 0)
+                    //display.Id = disp_server.DisplayId;
+                    if (disp_local != null)
                     {
                         // display is attached, status = running
                         display.Status = Status.ACTIVE;
@@ -206,7 +207,7 @@ namespace xpra
 
 
 
-                        if (disp_local > 0)
+                        if (disp_local != null)
                         {
                             // display is attached, status = running
                             ap.Status = Status.ACTIVE;
@@ -576,7 +577,7 @@ namespace xpra
             ap.ClearInstances();
             WorkDone(r);
         }
-        private async void OnPlay(int display)
+        private async void OnPlay(string display)
         {
             
             var r = new ReturnBox();
@@ -610,7 +611,7 @@ namespace xpra
 
             WorkDone(r);
         }
-        private async void OnPause(int display)
+        private async void OnPause(string display)
         {
             var r = new ReturnBox();
             var status = new Progress<string>(ReportStatus);
@@ -636,7 +637,7 @@ namespace xpra
 
             WorkDone(r);
         }
-        private async void OnResume(int display)
+        private async void OnResume(string display)
         {
             var r = new ReturnBox();
             var status = new Progress<string>(ReportStatus);
@@ -662,7 +663,7 @@ namespace xpra
 
             WorkDone(r);
         }
-        private async void OnStop(int display)
+        private async void OnStop(string display)
         {
             var r = new ReturnBox();
             var status = new Progress<string>(ReportStatus);
@@ -946,7 +947,7 @@ namespace xpra
                    (_playCommand = new RelayCommand(
                        x =>
                        {
-                           var display = int.Parse(x.ToString());
+                           var display = x.ToString();
                            OnPlay(display);
                        },
                        // can execute
@@ -965,7 +966,7 @@ namespace xpra
                    (_pauseCommand = new RelayCommand(
                        x =>
                        {
-                           var display = int.Parse(x.ToString());
+                           var display = x.ToString();
                            OnPause(display);
                        },
                        // can execute
@@ -984,7 +985,7 @@ namespace xpra
                    (_resumeCommand = new RelayCommand(
                        x =>
                        {
-                           var display = int.Parse(x.ToString());
+                           var display = x.ToString();
                            OnResume(display);
                        },
                        // can execute
@@ -1003,7 +1004,7 @@ namespace xpra
                    (_stopCommand = new RelayCommand(
                        x =>
                        {
-                           var display = int.Parse(x.ToString());
+                           var display = x.ToString();
                            OnStop(display);
                        },
                        // can execute

@@ -5,45 +5,45 @@
   		{
   			"name" : "Terminal",
   			"path" : "/usr/bin/xterm",
-            "host" : "192.168.100.201",
+            "url" : "ssh://sant@192.168.100.201",
+  		    "display" : 100,     
+		},
+ 		{
+  			"name" : "Terminal",
+  			"path" : "/usr/bin/xterm",
+            "url" : "ssh://sag@192.168.100.201",
   		    "display" : 100,     
 		},
   		{
-  			"name" : "Text Editor",
-  			"path" : "/usr/bin/gedit",
-  		    "host" : "192.168.100.201",
-  		    "display" : 100,     
-  		},
-  		{
   			"name" : "QtCreator",
   			"path" : "/home/sant/Qt/Tools/QtCreator/bin/qtcreator",
-  		    "host" : "192.168.100.201",
+  		    "url" : "ssh://sant@192.168.100.201",
   		    "display" : 100,     
   		},
   		{
   			"name" : "VS Code",
   			"path" : "/home/sant/Downloads/VSCode-linux-x64/code",
-  		    "host" : "192.168.100.201",
+  		    "url" : "ssh://sant@192.168.100.201",
   		    "display" : 101,     
   		},
         {
   			"name" : "Sublime",
   			"path" : "/snap/bin/subl",
   		    "process" : "/snap/sublime-text/85/opt/sublime_text/sublime_text",                        
-  		    "host" : "192.168.100.201",
+  		    "url" : "ssh://sant@192.168.100.201",
   		    "display" : 100,     
   		},
 
   		{
   			"name" : "VS Code",
   			"path" : "/home/sant/Downloads/VSCode-linux-x64/code",
-  		    "host" : "192.168.100.41",
+  		    "url" : "ssh://sant@192.168.100.41",
   		    "display" : 101,     
   		},
         {
   			"name" : "Text Editor",
   			"path" : "/usr/bin/gedit",
-  		    "host" : "192.168.100.41",
+  		    "url" : "ssh://sant@192.168.100.41",
   		    "display" : 100,     
   		},
 

@@ -12,9 +12,23 @@ namespace xpra
         public string Path { get; set; }
         public string Process { get; set; }
         public string Name { get; set; }
-        public string Host { get; set; }
-        
-        public Display Display { get; set; }
+        //public string Host { get; set; }
+
+        private Display _display;
+        public Display Display
+        {
+            get { return _display; }
+            set
+            {
+                if (_display != value)
+                {
+                    _display = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged("DisplayId");
+
+                }
+            }
+        }
 
         public string InstanceCountText
         {
@@ -89,7 +103,7 @@ namespace xpra
             }
         }
         
-        public int DisplayId { get { return Display.Id;  } }
+        public string DisplayId { get { return Display.Id;  } }
         
         public bool PlayButtonEnabled
         {
