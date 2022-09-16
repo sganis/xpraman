@@ -5,47 +5,20 @@
   		{
   			"name" : "Terminal",
   			"path" : "/usr/bin/xterm",
-            "url" : "ssh://sant@192.168.100.201",
-  		    "display" : 100,     
-		},
- 		{
-  			"name" : "Terminal",
-  			"path" : "/usr/bin/xterm",
-            "url" : "ssh://sag@192.168.100.201",
-  		    "display" : 100,     
+            "url" : "ssh://support@localhost",
+  		    "display" : 100
 		},
   		{
-  			"name" : "QtCreator",
-  			"path" : "/home/sant/Qt/Tools/QtCreator/bin/qtcreator",
-  		    "url" : "ssh://sant@192.168.100.201",
-  		    "display" : 100,     
-  		},
-  		{
-  			"name" : "VS Code",
-  			"path" : "/home/sant/Downloads/VSCode-linux-x64/code",
-  		    "url" : "ssh://sant@192.168.100.201",
-  		    "display" : 101,     
-  		},
-        {
-  			"name" : "Sublime",
-  			"path" : "/snap/bin/subl",
-  		    "process" : "/snap/sublime-text/85/opt/sublime_text/sublime_text",                        
-  		    "url" : "ssh://sant@192.168.100.201",
-  		    "display" : 100,     
-  		},
-
-  		{
-  			"name" : "VS Code",
-  			"path" : "/home/sant/Downloads/VSCode-linux-x64/code",
-  		    "url" : "ssh://sant@192.168.100.41",
-  		    "display" : 101,     
-  		},
-        {
-  			"name" : "Text Editor",
+  			"name" : "Gedit",
   			"path" : "/usr/bin/gedit",
-  		    "url" : "ssh://sant@192.168.100.41",
-  		    "display" : 100,     
+  		    "url" : "ssh://support@localhost",
+  		    "display" : 101   
   		},
-
+  		{
+  			"name" : "Glx Gears",
+  			"path" : "/usr/bin/glxgears",
+  		    "url" : "ssh://support@localhost",
+  		    "display" : 103    
+  		}
   	],
 }

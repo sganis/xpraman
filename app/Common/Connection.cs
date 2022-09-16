@@ -403,7 +403,6 @@ namespace xpra
             try
             {
                 r.ConnectStatus = ConnectStatus.UNKNOWN;
-
                 var pk = new PrivateKeyFile(AppKey);
                 var keyFiles = new[] { pk };
                 SshClient client = new SshClient(Host, CurrentPort, CurrentUser, keyFiles);
@@ -428,10 +427,10 @@ namespace xpra
                     r.Error = "Host does not respond";
                     r.ConnectStatus = ConnectStatus.BAD_HOST;
                 }
-                else if (ex.Message.Contains("OPENSSH"))
+                else if (ex.Message.ToUpper().Contains("OPENSSH"))
                 {
                     // openssh keys not supported by ssh.net yet
-                    string args = $"-i \"{AppKey}\" -p {port} -oPasswordAuthentication=no -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -oBatchMode=yes -oConnectTimeout={TIMEOUT} { CurrentUser}@{Host} \"echo ok\"";
+                    string args = $"-i \"{AppKey}\" -p {CurrentPort} -oPasswordAuthentication=no -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -oBatchMode=yes -oConnectTimeout={TIMEOUT} { CurrentUser}@{Host} \"echo ok\"";
                     var r1 = RunLocal("ssh.exe", args, true, TIMEOUT);
                     var ok = r1.Output.Trim() == "ok";
                     if (ok)

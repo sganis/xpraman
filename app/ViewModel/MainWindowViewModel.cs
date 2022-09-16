@@ -15,7 +15,8 @@ namespace xpra
     {
         #region Properties
 
-        static string XPRA = "Xpra-Client-Python3-x86_64_4.0.2-r26625";
+        //static string XPRA = "Xpra-Client-Python3-x86_64_4.0.2-r26625";
+        static string XPRA = "Xpra";
         static string XPRA_LOCAL = $@"C:\{XPRA}\Xpra.exe";        
         
         const string HostRegex = @"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$";
