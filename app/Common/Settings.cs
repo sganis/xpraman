@@ -35,11 +35,11 @@ namespace xpra
                 
                 // todo: escape and remove semicolon to avoid command injection
                 if (json.ContainsKey("xpra_server_args"))
-                XpraServerArgs = json["xpra_server_args"].ToString();
+                XpraServerArgs = string.Join(" ", JsonConvert.DeserializeObject<List<string>>(json["xpra_server_args"].ToString()));
                 if (json.ContainsKey("xpra_client_args"))
-                    XpraClientArgs = json["xpra_client_args"].ToString();
+                    XpraClientArgs = string.Join(" ", JsonConvert.DeserializeObject<List<string>>(json["xpra_client_args"].ToString()));
 
-                
+
 
                 if (!json.ContainsKey("apps"))
                     return;

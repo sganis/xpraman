@@ -1,24 +1,37 @@
 ﻿{
-    "xpra_server_args": "",
-    "xpra_client_args": "--opengl=no",
-    "apps" : [
-  		{
-  			"name" : "Terminal",
-  			"path" : "/usr/bin/xterm",
-            "url" : "ssh://support@localhost",
-  		    "display" : 100
-		},
-  		{
-  			"name" : "Gedit",
-  			"path" : "/usr/bin/gedit",
-  		    "url" : "ssh://support@localhost",
-  		    "display" : 101   
-  		},
-  		{
-  			"name" : "Glx Gears",
-  			"path" : "/usr/bin/glxgears",
-  		    "url" : "ssh://support@localhost",
-  		    "display" : 103    
-  		}
-  	],
+  "xpra_server_args": [
+      "--file-transfer=no",
+      " --open-files=no",
+      "--open-url=no",
+      "--printing=no",
+      "--notifications=no",
+      "--system-tray=no",
+      "--speaker=disabled",
+    "--microphone=disabled"
+  ],
+  "xpra_client_args": [
+    "--opengl=yes",
+    "--splash=no",
+    "--border=orange,4"
+  ],
+    "apps": [
+      {
+        "name": "Terminal",
+        "path": "/usr/bin/xterm",
+        "url": "ssh://support@localhost",
+        "display": 100
+      },
+      {
+        "name": "Gedit",
+        "path": "/usr/bin/gedit",
+        "url": "ssh://support@localhost",
+        "display": 101
+      },
+      {
+        "name": "Glx Gears",
+        "path": "/usr/bin/glxgears",
+        "url": "ssh://support@localhost",
+        "display": 103
+      }
+    ]
 }
