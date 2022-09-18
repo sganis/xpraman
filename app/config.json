@@ -14,24 +14,30 @@
     "--splash=no",
     "--border=orange,4"
   ],
-    "apps": [
-      {
-        "name": "Terminal",
-        "path": "/usr/bin/xterm",
-        "url": "ssh://support@localhost",
-        "display": 100
-      },
-      {
-        "name": "Gedit",
-        "path": "/usr/bin/gedit",
-        "url": "ssh://support@localhost",
-        "display": 101
-      },
-      {
-        "name": "Glx Gears",
-        "path": "/usr/bin/glxgears",
-        "url": "ssh://support@localhost",
-        "display": 103
-      }
-    ]
+  "apps": [
+    {
+      "name": "Terminal",
+      "path": "/usr/bin/xterm",
+      "url": "ssh://san@192.168.100.202",
+      "display": 100
+    },
+    {
+      "name": "Gedit",
+      "path": "/usr/bin/gedit",
+      "url": "ssh://san@192.168.100.202",
+      "display": 101
+    },
+    {
+      "name": "Glx Gears",
+      "path": "/usr/bin/glxgears",
+      "url": "ssh://san@192.168.100.202",
+      "display": 103
+    },
+    {
+      "name": "Sublime",
+      "path": "/snap/bin/subl",
+      "url": "ssh://san@192.168.100.202",
+      "display": 104
+    }
+  ]
 }

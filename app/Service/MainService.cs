@@ -17,6 +17,8 @@ namespace xpra
     {
         #region Properties
 
+        //const string XPRA_CMD = "/home/san/venv/bin/python /home/san/venv/bin/xpra";
+        const string XPRA_CMD = "xpra";
         string m_xpra_local;
 
         Settings m_settings;
@@ -156,7 +158,7 @@ namespace xpra
         {
             ReturnBox r = new ReturnBox();
             display.Status = Status.STARTING;
-            var cmd = $"xpra start :{display.Id} {m_settings.XpraServerArgs} ";
+            var cmd = $"{XPRA_CMD} start :{display.Id} {m_settings.XpraServerArgs} ";
             r = conn.RunRemote(cmd);
             if (r.Success)
             {
@@ -173,7 +175,7 @@ namespace xpra
         {
             ReturnBox r = new ReturnBox();
             display.Status = Status.STOPPING;
-            var cmd = $"xpra stop :{display.Id}";
+            var cmd = $"{XPRA_CMD} stop :{display.Id}";
             r = conn.RunRemote(cmd);
             display.Status = Status.STOPPED;
             return r;
@@ -229,7 +231,7 @@ namespace xpra
         public List<Ap> GetApsServer(Connection conn)
         {
             // get server xpra sessions
-            var r = conn.RunRemote($"xpra list |grep -o \"LIVE session at :[0-9]\\+\" | awk '{{print $4}}'", 10);
+            var r = conn.RunRemote($"{XPRA_CMD} list |grep -o \"LIVE session at :[0-9]\\+\" | awk '{{print $4}}'", 10);
             var apps = new Dictionary<string, Ap>();
             var displays = new Dictionary<string, Display>();
 
